@@ -3,10 +3,16 @@
   "version": "2.0.0",
   "description": "Bull$hit Bingo — Supabase + Vercel",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
   }
 }

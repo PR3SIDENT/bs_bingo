@@ -1,7 +1,7 @@
-const { supabaseAdmin } = require('../lib/supabase-admin');
-const { GRID_TIERS, getGridSize, shuffle } = require('../lib/bingo-logic');
+import { supabaseAdmin } from '../lib/supabase-admin.js';
+import { GRID_TIERS, getGridSize, shuffle } from '../lib/bingo-logic.js';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -98,4 +98,4 @@ module.exports = async function handler(req, res) {
   }));
 
   return res.status(201).json({ playerId, boardId, gridSize, cells });
-};
+}
