@@ -393,8 +393,13 @@ joinForm.addEventListener('submit', async (e) => {
   }
   joinSection.classList.add('hidden');
 
-  // Show setup for everyone; only host can start the game
-  if (topics.length >= MIN_TOPICS && isCreator()) {
+  // If game is already running (other players have cards), jump straight in
+  const { count } = await supabase
+    .from('player_cards')
+    .select('id', { count: 'exact', head: true })
+    .eq('board_id', boardId);
+
+  if (topics.length >= MIN_TOPICS && (isCreator() || count > 0)) {
     await enterPlayMode();
   } else {
     showSetupForEveryone();
