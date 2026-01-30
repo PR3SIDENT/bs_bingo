@@ -9,7 +9,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-const COLORS = ['#a855f7', '#ec4899', '#06b6d4', '#f59e0b', '#22c55e', '#f43f5e'];
+const COLORS = ['#F59E0B', '#FCD34D', '#D97706', '#FFF8E7', '#D4A574', '#10B981'];
 
 class Particle {
   constructor() {

@@ -5,3 +5,6 @@ data/
 *.db
 .DS_Store
 supabase/.temp/
+
+.vercel
+.env*.local

@@ -41,6 +41,18 @@ export async function signOut() {
   window.location.href = '/';
 }
 
+export async function signInAnonymously() {
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error) console.error('Anonymous sign-in error:', error.message);
+  return data?.session || null;
+}
+
+export async function ensureSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) return session;
+  return signInAnonymously();
+}
+
 export async function getProfile(userId) {
   const { data } = await supabase
     .from('profiles')

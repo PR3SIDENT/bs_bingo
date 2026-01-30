@@ -1,5 +1,5 @@
 import { supabase } from './supabase-client.js';
-import { getSession, getProfile, signOut } from './auth.js';
+import { getSession, getProfile, ensureSession, signOut } from './auth.js';
 
 const boardId = window.location.pathname.replace(/^\//, '');
 
@@ -32,7 +32,7 @@ const bingoGrid = document.getElementById('bingo-grid');
 const bingoOverlay = document.getElementById('bingo-overlay');
 const bingoWinnerEl = document.getElementById('bingo-winner');
 const shareBtn = document.getElementById('share-btn');
-const joinModal = document.getElementById('join-modal');
+const joinSection = document.getElementById('join-section');
 const joinForm = document.getElementById('join-form');
 const joinNameInput = document.getElementById('join-name');
 const joinSubmitBtn = document.getElementById('join-submit-btn');
@@ -54,16 +54,16 @@ let invalidateTimer = null;
 // --- Init ---
 
 async function init() {
-  session = await getSession();
+  session = await ensureSession();
   if (!session) {
-    window.location.href = '/';
+    document.body.innerHTML = '<div class="glass-card" style="margin:4rem auto;max-width:400px;padding:2rem;text-align:center"><h2>Unable to start session</h2><p style="margin-top:0.5rem;color:var(--text-dim)">Please try refreshing the page.</p><a href="/" class="btn btn-primary" style="margin-top:1rem;display:inline-block">Go Home</a></div>';
     return;
   }
 
   // Load board
   const { data: board, error } = await supabase
     .from('boards')
-    .select('id, name')
+    .select('id, name, created_by')
     .eq('id', boardId)
     .single();
 
@@ -100,21 +100,60 @@ async function init() {
     await tryLoadMyCard();
     await loadOtherCards();
   } else {
-    // Pre-fill name from profile
+    const isCreator = board.created_by === session.user.id;
     const profile = await getProfile(session.user.id);
-    if (profile?.display_name) {
-      joinNameInput.value = profile.display_name;
-      updateJoinButton();
+
+    if (isCreator && profile?.display_name) {
+      // Auto-join board creators with their profile name + auto color
+      await autoJoin(profile.display_name);
+    } else {
+      // Pre-fill name for signed-in non-creators
+      if (profile?.display_name) {
+        joinNameInput.value = profile.display_name;
+        updateJoinButton();
+      }
+      showJoinSection();
     }
-    showJoinModal();
   }
 
   subscribeRealtime();
 }
 
-function showJoinModal() {
-  joinModal.classList.remove('hidden');
+function showJoinSection() {
+  joinSection.classList.remove('hidden');
+  setupSection.classList.add('hidden');
   joinNameInput.focus();
+}
+
+const AUTO_COLORS = ['#FF6B35', '#DAA520', '#6B8E23', '#B7410E', '#3b82f6', '#ec4899', '#06b6d4', '#D4A574'];
+
+async function autoJoin(name) {
+  // Pick a color not already taken by other players
+  const usedColors = new Set(allPlayers.map((p) => p.color));
+  const color = AUTO_COLORS.find((c) => !usedColors.has(c)) || AUTO_COLORS[0];
+
+  const { data: player, error } = await supabase
+    .from('players')
+    .insert({
+      user_id: session.user.id,
+      board_id: boardId,
+      name,
+      color,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Auto-join error:', error.message);
+    // Fall back to manual join modal
+    showJoinSection();
+    return;
+  }
+
+  myPlayer = player;
+  if (!allPlayers.find((p) => p.id === player.id)) {
+    allPlayers.push(player);
+  }
 }
 
 // --- Realtime ---
@@ -210,14 +249,20 @@ colorSwatches.forEach((swatch) => {
 });
 
 function updateJoinButton() {
-  joinSubmitBtn.disabled = !joinNameInput.value.trim() || !selectedColor;
+  joinSubmitBtn.disabled = !joinNameInput.value.trim();
 }
 joinNameInput.addEventListener('input', updateJoinButton);
 
 joinForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = joinNameInput.value.trim();
-  if (!name || !selectedColor) return;
+  if (!name) return;
+
+  // Auto-assign a color if the user didn't pick one
+  if (!selectedColor) {
+    const usedColors = new Set(allPlayers.map((p) => p.color));
+    selectedColor = AUTO_COLORS.find((c) => !usedColors.has(c)) || AUTO_COLORS[0];
+  }
 
   joinSubmitBtn.disabled = true;
   joinSubmitBtn.textContent = 'Joining...';
@@ -244,7 +289,8 @@ joinForm.addEventListener('submit', async (e) => {
   if (!allPlayers.find((p) => p.id === player.id)) {
     allPlayers.push(player);
   }
-  joinModal.classList.add('hidden');
+  joinSection.classList.add('hidden');
+  setupSection.classList.remove('hidden');
 });
 
 // --- Topics ---
@@ -301,7 +347,7 @@ topicListEl.addEventListener('click', async (e) => {
 
 async function enterPlayMode() {
   if (!myPlayer) {
-    showJoinModal();
+    showJoinSection();
     return;
   }
 
@@ -525,7 +571,7 @@ function renderMiniCard(playerId) {
 // --- Bingo Overlay ---
 
 function showBingoOverlay(playerName, playerColor) {
-  bingoWinnerEl.innerHTML = `<span class="player-dot big" style="background:${playerColor}"></span> ${escapeHtml(playerName)} wins!`;
+  bingoWinnerEl.innerHTML = `<span class="player-dot big" style="background:${playerColor}"></span> ${escapeHtml(playerName)} called it.`;
   bingoOverlay.classList.remove('hidden');
   window.launchConfetti();
 }

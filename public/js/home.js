@@ -1,48 +1,73 @@
 import { supabase } from './supabase-client.js';
-import { getSession, getUser, getProfile, signInWithGoogle, signInWithMagicLink, signOut, onAuthStateChange } from './auth.js';
+import { getSession, getProfile, ensureSession, signInWithGoogle, signInWithMagicLink, signOut, onAuthStateChange } from './auth.js';
 
-const authSection = document.getElementById('auth-section');
-const appSection = document.getElementById('app-section');
+const userBar = document.getElementById('user-bar');
 const userNameEl = document.getElementById('user-name');
+const signInPrompt = document.getElementById('sign-in-prompt');
+const showSignInBtn = document.getElementById('show-sign-in-btn');
+const authModal = document.getElementById('auth-modal');
+const closeAuthModalBtn = document.getElementById('close-auth-modal');
 const googleBtn = document.getElementById('google-btn');
 const magicForm = document.getElementById('magic-form');
 const magicEmailInput = document.getElementById('magic-email');
 const magicStatus = document.getElementById('magic-status');
+const userNameInput = document.getElementById('user-name-input');
 const signOutBtn = document.getElementById('sign-out-btn');
 const createForm = document.getElementById('create-form');
 const joinForm = document.getElementById('join-form');
 
-function showAuth() {
-  authSection.classList.remove('hidden');
-  appSection.classList.add('hidden');
+function isAnonymous(session) {
+  return session?.user?.is_anonymous === true;
 }
 
-function showApp(displayName) {
-  authSection.classList.add('hidden');
-  appSection.classList.remove('hidden');
-  userNameEl.textContent = displayName || 'Player';
-}
-
-// Auth state
-onAuthStateChange(async (session) => {
-  if (session) {
-    const profile = await getProfile(session.user.id);
-    showApp(profile?.display_name || session.user.email);
+function updateUserUI(session, profile) {
+  if (session && !isAnonymous(session)) {
+    // Signed-in user: show user bar, hide sign-in prompt
+    const displayName = profile?.display_name || session.user.email || 'Player';
+    userNameEl.textContent = displayName;
+    userBar.classList.remove('hidden');
+    signInPrompt.classList.add('hidden');
   } else {
-    showAuth();
+    // Anonymous or no session: hide user bar, show sign-in prompt
+    userBar.classList.add('hidden');
+    signInPrompt.classList.remove('hidden');
+  }
+}
+
+// Auth state changes
+onAuthStateChange(async (session) => {
+  if (session && !isAnonymous(session)) {
+    const profile = await getProfile(session.user.id);
+    updateUserUI(session, profile);
+    authModal.classList.add('hidden');
+  } else {
+    updateUserUI(session, null);
   }
 });
 
-// Initial check
+// Initial load: ensure session (anonymous if needed), show app immediately
 (async () => {
-  const session = await getSession();
-  if (session) {
+  const session = await ensureSession();
+  if (session && !isAnonymous(session)) {
     const profile = await getProfile(session.user.id);
-    showApp(profile?.display_name || session.user.email);
+    updateUserUI(session, profile);
   } else {
-    showAuth();
+    updateUserUI(session, null);
   }
 })();
+
+// Sign-in modal controls
+showSignInBtn.addEventListener('click', () => {
+  authModal.classList.remove('hidden');
+});
+
+closeAuthModalBtn.addEventListener('click', () => {
+  authModal.classList.add('hidden');
+});
+
+authModal.addEventListener('click', (e) => {
+  if (e.target === authModal) authModal.classList.add('hidden');
+});
 
 // Google sign-in
 googleBtn.addEventListener('click', () => {
@@ -75,6 +100,43 @@ magicForm.addEventListener('submit', async (e) => {
 // Sign out
 signOutBtn.addEventListener('click', () => signOut());
 
+// Inline name editing
+userNameEl.addEventListener('click', () => {
+  userNameInput.value = userNameEl.textContent;
+  userNameEl.classList.add('hidden');
+  userNameInput.classList.remove('hidden');
+  userNameInput.focus();
+  userNameInput.select();
+});
+
+async function saveName() {
+  const newName = userNameInput.value.trim();
+  userNameInput.classList.add('hidden');
+  userNameEl.classList.remove('hidden');
+
+  if (!newName || newName === userNameEl.textContent) return;
+
+  const session = await getSession();
+  if (!session) return;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ display_name: newName })
+    .eq('id', session.user.id);
+
+  if (error) {
+    console.error('Failed to update name:', error.message);
+    return;
+  }
+  userNameEl.textContent = newName;
+}
+
+userNameInput.addEventListener('blur', saveName);
+userNameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); userNameInput.blur(); }
+  if (e.key === 'Escape') { userNameInput.classList.add('hidden'); userNameEl.classList.remove('hidden'); }
+});
+
 // Create board
 createForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -85,8 +147,12 @@ createForm.addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = 'Creating...';
 
-  const session = await getSession();
-  if (!session) { showAuth(); return; }
+  const session = await ensureSession();
+  if (!session) {
+    btn.disabled = false;
+    btn.textContent = 'Create Board';
+    return;
+  }
 
   // Generate short ID
   const id = crypto.randomUUID().split('-')[0];
