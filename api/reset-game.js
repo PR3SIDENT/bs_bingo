@@ -25,8 +25,7 @@ export default async function handler(req, res) {
   if (boardErr || !board) return res.status(404).json({ error: 'Board not found' });
   if (board.created_by !== user.id) return res.status(403).json({ error: 'Only the host can reset' });
 
-  // Delete all cards and bingo events for this board
-  await supabaseAdmin.from('bingo_events').delete().eq('board_id', boardId);
+  // Delete cards only — preserve bingo_events for leaderboard history
   await supabaseAdmin.from('player_cards').delete().eq('board_id', boardId);
 
   return res.status(200).json({ ok: true });

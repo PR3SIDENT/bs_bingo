@@ -17,7 +17,7 @@
     <button id="share-btn" class="btn btn-small btn-secondary">Copy Link</button>
   </header>
 
-  <main class="board-main">
+  <main class="board-main" style="opacity:0">
     <h1 id="board-name" class="board-name-hero"></h1>
     <div id="game-timer" class="game-timer hidden">
       <span class="timer-dot"></span>
@@ -54,9 +54,9 @@
     </section>
 
     <!-- Setup Mode -->
-    <section id="setup-section" class="setup-card">
-      <h2>Add Topics</h2>
-      <p class="hint">What do they always say? 8 topics = 3&times;3, 15 = 4&times;4, 24 = 5&times;5</p>
+    <section id="setup-section" class="setup-card hidden">
+      <h2>What do they always do?</h2>
+      <p class="hint">Add their go-to moves. 8 topics = 3&times;3, 15 = 4&times;4, 24 = 5&times;5</p>
 
       <form id="topic-form" class="topic-form">
         <input
@@ -72,9 +72,14 @@
 
       <div id="topic-list" class="topic-list"></div>
 
+      <div id="reward-row" class="reward-row hidden">
+        <input type="text" id="reward-input" class="reward-input" placeholder="Stakes? e.g. loser buys a marg" maxlength="100" autocomplete="off">
+      </div>
+
       <div class="setup-actions">
         <span id="topic-count" class="topic-count">0 topics</span>
-        <button id="play-btn" class="btn btn-primary btn-play" disabled>Shuffle &amp; Play</button>
+        <span id="waiting-host" class="waiting-host hidden">Waiting for host to start…</span>
+        <button id="play-btn" class="btn btn-primary btn-play" disabled>Start Game</button>
       </div>
     </section>
 
@@ -89,11 +94,18 @@
       <!-- Your card -->
       <div id="my-card-wrapper" class="my-card-wrapper">
         <div class="card-owner-label" id="my-card-label"></div>
+        <div id="reward-display" class="reward-display hidden"></div>
         <div id="bingo-grid" class="bingo-grid"></div>
       </div>
 
       <!-- Other players' mini cards -->
       <div id="other-players" class="other-players-scroll"></div>
+
+      <!-- Leaderboard -->
+      <section id="leaderboard-section" class="leaderboard-card hidden">
+        <h2>Leaderboard</h2>
+        <div id="leaderboard-list" class="leaderboard-list"></div>
+      </section>
     </section>
   </main>
 

@@ -157,17 +157,20 @@ createForm.addEventListener('submit', async (e) => {
   // Generate short ID
   const id = crypto.randomUUID().split('-')[0];
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('boards')
-    .insert({ id, name, created_by: session.user.id });
+    .insert({ id, name, created_by: session.user.id })
+    .select()
+    .single();
 
   if (error) {
-    console.error('Failed to create board:', error.message);
+    console.error('Failed to create board:', error.message, error);
     btn.disabled = false;
-    btn.textContent = 'Create Board';
+    btn.textContent = "Let's Go";
     return;
   }
 
+  console.log('Board created:', data);
   window.location.href = `/${id}`;
 });
 
@@ -189,3 +192,154 @@ joinForm.addEventListener('submit', (e) => {
     window.location.href = `/${code}`;
   }
 });
+
+// ========== Quote Wall ==========
+const featuredQuotes = new Set([
+  "When are you having kids?",
+  "Nobody wants to work anymore.",
+  "Do your own research.",
+  "Are you still single?",
+  "Wake up, sheeple.",
+  "We're like a family here.",
+]);
+
+const allQuotes = [
+  "Back in my day...",
+  "You look tired.",
+  "When are you having kids?",
+  "Nobody wants to work anymore.",
+  "You should buy a house.",
+  "I saw on Facebook...",
+  "Have you tried yoga?",
+  "Sleep when you're dead.",
+  "Do your own research.",
+  "Let's circle back.",
+  "Per my last email...",
+  "I'm SO busy.",
+  "Are you still single?",
+  "It is what it is.",
+  "Follow the money.",
+  "Think about it.",
+  "We're like a family here.",
+  "You're not getting any younger.",
+  "Kids these days...",
+  "Wake up, sheeple.",
+  "Synergy.",
+  "Quick question.",
+  "I barely slept.",
+  "My trainer says...",
+  "It's all about mindset.",
+];
+
+const fqContainer = document.getElementById('floating-quotes');
+if (fqContainer) {
+  const shuffled = [...allQuotes].sort(() => Math.random() - 0.5);
+
+  shuffled.forEach((text, i) => {
+    const el = document.createElement('span');
+    const isFeatured = featuredQuotes.has(text);
+    const isAmber = i % 6 === 0;
+    const sizeClass = isFeatured ? 'fq--xl' : ['fq--sm', '', '', 'fq--lg'][i % 4];
+
+    el.className = 'fq'
+      + (sizeClass ? ' ' + sizeClass : '')
+      + (isAmber ? ' fq--amber' : '');
+    el.textContent = text;
+    el.style.setProperty('--fq-d', (i * 0.04) + 's');
+    fqContainer.appendChild(el);
+  });
+}
+
+// ========== Landing Page Animations ==========
+
+// --- Scroll reveal via IntersectionObserver ---
+const revealEls = document.querySelectorAll('.reveal');
+if (revealEls.length) {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealEls.forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.1}s`;
+    revealObserver.observe(el);
+  });
+}
+
+// --- Flipper: word rotation with sizer ---
+const flipper = document.getElementById('flipper');
+if (flipper) {
+  const texts = flipper.querySelectorAll('.flipper-text');
+  let current = 0;
+
+  // Create an invisible sizer span that holds the container width
+  const sizer = document.createElement('span');
+  sizer.className = 'flipper-sizer';
+  sizer.textContent = texts[current].textContent;
+  flipper.prepend(sizer);
+
+  setInterval(() => {
+    const prev = current;
+    current = (current + 1) % texts.length;
+
+    texts[prev].classList.remove('active');
+    sizer.textContent = texts[current].textContent;
+    texts[current].classList.add('active');
+  }, 2400);
+}
+
+// --- Example card auto-marking ---
+const demoGrid = document.getElementById('demo-grid');
+if (demoGrid) {
+  const demoCells = Array.from(demoGrid.querySelectorAll('.demo-cell:not(.demo-free)'));
+  const marked = new Set();
+
+  function autoMark() {
+    if (marked.size >= demoCells.length) {
+      // Reset all marks, start over
+      demoCells.forEach((c) => c.classList.remove('auto-mark'));
+      marked.clear();
+    }
+
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * demoCells.length);
+    } while (marked.has(idx));
+
+    marked.add(idx);
+    demoCells[idx].classList.add('auto-mark');
+  }
+
+  // Start after the section scrolls into view
+  const demoObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      demoObserver.disconnect();
+      // Mark a few cells with staggered timing
+      let delay = 800;
+      for (let i = 0; i < 5; i++) {
+        setTimeout(autoMark, delay);
+        delay += 1200;
+      }
+      // Then keep marking on an interval
+      setInterval(autoMark, 3000);
+    }
+  }, { threshold: 0.3 });
+
+  demoObserver.observe(demoGrid);
+}
+
+
+// --- Hide scroll hint on first scroll ---
+const scrollHint = document.querySelector('.scroll-hint');
+if (scrollHint) {
+  const hideHint = () => {
+    scrollHint.style.opacity = '0';
+    scrollHint.style.transition = 'opacity 0.4s ease';
+    window.removeEventListener('scroll', hideHint);
+  };
+  window.addEventListener('scroll', hideHint, { passive: true });
+}

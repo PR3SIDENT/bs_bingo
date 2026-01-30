@@ -39,6 +39,12 @@ const joinNameInput = document.getElementById('join-name');
 const joinSubmitBtn = document.getElementById('join-submit-btn');
 const myCardLabel = document.getElementById('my-card-label');
 const otherPlayersEl = document.getElementById('other-players');
+const waitingHostEl = document.getElementById('waiting-host');
+const leaderboardSection = document.getElementById('leaderboard-section');
+const leaderboardListEl = document.getElementById('leaderboard-list');
+const rewardRow = document.getElementById('reward-row');
+const rewardInput = document.getElementById('reward-input');
+const rewardDisplay = document.getElementById('reward-display');
 
 let session = null;
 let topics = [];
@@ -49,6 +55,8 @@ let otherCards = {};
 let selectedColor = null;
 let realtimeChannel = null;
 let boardCreatorId = null;
+let boardReward = null;
+let rewardSaveTimer = null;
 
 // Debounce for card invalidation (trigger fires per-row)
 let invalidateTimer = null;
@@ -65,7 +73,7 @@ async function init() {
   // Load board
   const { data: board, error } = await supabase
     .from('boards')
-    .select('id, name, created_by, created_at')
+    .select('id, name, created_by, created_at, reward')
     .eq('id', boardId)
     .single();
 
@@ -74,9 +82,10 @@ async function init() {
     return;
   }
 
-  boardNameEl.textContent = board.name;
+  boardNameEl.textContent = `${board.name}'s Bull$hit Bingo`;
   boardCreatorId = board.created_by;
-  document.title = `${board.name} — Bull$hit Bingo`;
+  boardReward = board.reward || '';
+  document.title = `${board.name}'s Bull$hit Bingo`;
   startGameTimer(board.created_at);
 
   // Load topics
@@ -89,6 +98,9 @@ async function init() {
   renderTopicList();
   updateTopicCount();
 
+  // Reward setup
+  initReward();
+
   // Load players
   const { data: playersData } = await supabase
     .from('players')
@@ -96,6 +108,9 @@ async function init() {
     .eq('board_id', boardId)
     .order('created_at', { ascending: true });
   allPlayers = playersData || [];
+
+  // Load leaderboard (after players so names resolve)
+  await loadLeaderboard();
 
   // Check if current user already has a player
   myPlayer = allPlayers.find((p) => p.user_id === session.user.id) || null;
@@ -106,9 +121,9 @@ async function init() {
     // If player exists but has no card yet and board has topics, generate one
     if (!myCard && topics.length >= MIN_TOPICS) {
       await enterPlayMode();
-    } else if (!myCard && !isCreator()) {
-      // Non-creator waiting for topics — show a waiting state
-      showWaiting();
+    } else if (!myCard) {
+      // Show setup for everyone (host or non-creator)
+      showSetupForEveryone();
     }
   } else {
     const profile = await getProfile(session.user.id);
@@ -116,6 +131,7 @@ async function init() {
     if (isCreator() && profile?.display_name) {
       // Auto-join board creators with their profile name + auto color
       await autoJoin(profile.display_name);
+      showSetupForEveryone();
     } else {
       // Pre-fill name for signed-in non-creators
       if (profile?.display_name) {
@@ -127,6 +143,13 @@ async function init() {
   }
 
   subscribeRealtime();
+  revealPage();
+}
+
+function revealPage() {
+  const main = document.querySelector('.board-main');
+  main.style.transition = 'opacity 0.15s ease';
+  main.style.opacity = '1';
 }
 
 function isCreator() {
@@ -139,9 +162,16 @@ function showJoinSection() {
   joinNameInput.focus();
 }
 
-function showWaiting() {
+function showSetupForEveryone() {
   setupSection.classList.remove('hidden');
-  setupSection.innerHTML = '<p class="hint" style="text-align:center;padding:2rem 0;">Waiting for the host to finish setting up&hellip;</p>';
+  if (isCreator()) {
+    playBtn.classList.remove('hidden');
+    waitingHostEl.classList.add('hidden');
+  } else {
+    playBtn.classList.add('hidden');
+    waitingHostEl.classList.remove('hidden');
+  }
+  updateTopicCount();
 }
 
 // --- Game Timer ---
@@ -220,10 +250,6 @@ function subscribeRealtime() {
         topics.push(topic);
         renderTopicList();
         updateTopicCount();
-        // Auto-enter play for non-creators once enough topics exist
-        if (!isCreator() && myPlayer && !myCard && topics.length >= MIN_TOPICS) {
-          enterPlayMode();
-        }
       }
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'topics', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -236,6 +262,7 @@ function subscribeRealtime() {
       const player = payload.new;
       if (!allPlayers.find((p) => p.id === player.id)) {
         allPlayers.push(player);
+        updateTopicCount();
         renderOtherCards();
       }
     })
@@ -282,10 +309,9 @@ function subscribeRealtime() {
           if (isCreator()) {
             enterSetupMode();
           } else {
-            // Non-creators wait — auto-rejoin when host generates new cards
+            // Non-creators go back to setup — auto-rejoin when host generates new cards
             playSection.classList.add('hidden');
-            setupSection.classList.remove('hidden');
-            setupSection.innerHTML = '<p class="hint" style="text-align:center;padding:2rem 0;">Game reset — waiting for the host to reshuffle&hellip;</p>';
+            showSetupForEveryone();
           }
         }
       }, 200);
@@ -302,6 +328,8 @@ function subscribeRealtime() {
           });
         }
       }
+      // Update leaderboard with new win
+      await loadLeaderboard();
     })
     .subscribe();
 }
@@ -361,13 +389,11 @@ joinForm.addEventListener('submit', async (e) => {
   }
   joinSection.classList.add('hidden');
 
-  // Non-creators go straight to play (or wait); only creator sees setup
-  if (topics.length >= MIN_TOPICS) {
+  // Show setup for everyone; only host can start the game
+  if (topics.length >= MIN_TOPICS && isCreator()) {
     await enterPlayMode();
-  } else if (isCreator()) {
-    setupSection.classList.remove('hidden');
   } else {
-    showWaiting();
+    showSetupForEveryone();
   }
 });
 
@@ -376,11 +402,12 @@ joinForm.addEventListener('submit', async (e) => {
 function renderTopicList() {
   topicListEl.innerHTML = '';
   topics.forEach((topic) => {
+    const canRemove = isCreator() || (session && topic.created_by === session.user.id);
     const el = document.createElement('div');
     el.className = 'topic-item';
     el.innerHTML = `
       <span class="topic-text">${escapeHtml(topic.text)}</span>
-      <button class="topic-remove" data-id="${topic.id}" title="Remove">&times;</button>
+      ${canRemove ? `<button class="topic-remove" data-id="${topic.id}" title="Remove">&times;</button>` : ''}
     `;
     topicListEl.appendChild(el);
   });
@@ -388,13 +415,20 @@ function renderTopicList() {
 
 function updateTopicCount() {
   const count = topics.length;
-  topicCountEl.textContent = `${count} topic${count !== 1 ? 's' : ''}`;
-  playBtn.disabled = count < MIN_TOPICS;
-  if (count < MIN_TOPICS) {
-    playBtn.textContent = `Need ${MIN_TOPICS - count} more`;
-  } else {
-    const gs = getGridSize(count);
-    playBtn.textContent = `Shuffle & Play (${gs}\u00d7${gs})`;
+  const playerCount = allPlayers.length;
+  const playerLabel = `${playerCount} player${playerCount !== 1 ? 's' : ''}`;
+  topicCountEl.textContent = `${playerLabel} · ${count} topic${count !== 1 ? 's' : ''}`;
+
+  if (isCreator()) {
+    playBtn.disabled = count < MIN_TOPICS;
+    if (count < MIN_TOPICS) {
+      playBtn.textContent = `Need ${MIN_TOPICS - count} more`;
+      rewardRow.classList.add('hidden');
+    } else {
+      const gs = getGridSize(count);
+      playBtn.textContent = `Start Game (${gs}\u00d7${gs})`;
+      rewardRow.classList.remove('hidden');
+    }
   }
 }
 
@@ -487,6 +521,14 @@ resetGameBtn.addEventListener('click', async () => {
   if (!res.ok) {
     const err = await res.json();
     console.error('Reset failed:', err.error);
+  } else {
+    // Clear local state immediately (don't rely on realtime DELETE filter)
+    myCard = null;
+    otherCards = {};
+    renderOwnCard();
+    renderOtherCards();
+    bingoOverlay.classList.add('hidden');
+    enterSetupMode();
   }
 
   resetGameBtn.disabled = false;
@@ -705,6 +747,80 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// --- Leaderboard ---
+
+async function loadLeaderboard() {
+  const { data: events } = await supabase
+    .from('bingo_events')
+    .select('player_id')
+    .eq('board_id', boardId);
+
+  if (!events || events.length === 0) {
+    leaderboardSection.classList.add('hidden');
+    return;
+  }
+
+  // Count wins per player
+  const counts = {};
+  events.forEach((e) => {
+    counts[e.player_id] = (counts[e.player_id] || 0) + 1;
+  });
+
+  // Sort by wins descending
+  const sorted = Object.entries(counts)
+    .map(([playerId, wins]) => ({ playerId: parseInt(playerId), wins }))
+    .sort((a, b) => b.wins - a.wins);
+
+  leaderboardListEl.innerHTML = '';
+  sorted.forEach((entry) => {
+    const player = allPlayers.find((p) => p.id === entry.playerId);
+    const name = player ? escapeHtml(player.name) : 'Unknown';
+    const color = player ? player.color : '#999';
+    const el = document.createElement('div');
+    el.className = 'leaderboard-item';
+    el.innerHTML = `<span class="player-dot" style="background:${color}"></span> <span class="leaderboard-name">${name}</span> <span class="leaderboard-wins">${entry.wins}</span>`;
+    leaderboardListEl.appendChild(el);
+  });
+
+  leaderboardSection.classList.remove('hidden');
+}
+
+// --- Reward ---
+
+function initReward() {
+  if (isCreator()) {
+    // Host sees editable input — visibility controlled by updateTopicCount
+    rewardInput.value = boardReward;
+    rewardInput.addEventListener('input', () => {
+      clearTimeout(rewardSaveTimer);
+      rewardSaveTimer = setTimeout(saveReward, 600);
+    });
+  }
+
+  // Everyone sees display if reward is set
+  updateRewardDisplay();
+}
+
+async function saveReward() {
+  const value = rewardInput.value.trim();
+  boardReward = value;
+  updateRewardDisplay();
+
+  await supabase
+    .from('boards')
+    .update({ reward: value || null })
+    .eq('id', boardId);
+}
+
+function updateRewardDisplay() {
+  if (boardReward) {
+    rewardDisplay.textContent = boardReward;
+    rewardDisplay.classList.remove('hidden');
+  } else {
+    rewardDisplay.classList.add('hidden');
+  }
 }
 
 // --- Go ---
