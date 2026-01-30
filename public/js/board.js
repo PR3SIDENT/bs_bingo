@@ -246,7 +246,11 @@ function subscribeRealtime() {
     .channel(`board-${boardId}`)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'topics', filter: `board_id=eq.${boardId}` }, (payload) => {
       const topic = payload.new;
-      if (!topics.find((t) => t.id === topic.id)) {
+      // Check for optimistic entry (temp id) and replace it
+      const tempIdx = topics.findIndex((t) => String(t.id).startsWith('temp-') && t.text === topic.text && t.created_by === topic.created_by);
+      if (tempIdx !== -1) {
+        topics[tempIdx].id = topic.id;
+      } else if (!topics.find((t) => t.id === topic.id)) {
         topics.push(topic);
         renderTopicList();
         updateTopicCount();
@@ -411,6 +415,8 @@ function renderTopicList() {
     `;
     topicListEl.appendChild(el);
   });
+  // Auto-scroll to show newest topic
+  topicListEl.scrollTop = topicListEl.scrollHeight;
 }
 
 function updateTopicCount() {
@@ -439,11 +445,29 @@ topicForm.addEventListener('submit', async (e) => {
 
   topicInput.value = '';
 
-  const { error } = await supabase
-    .from('topics')
-    .insert({ board_id: boardId, text, created_by: session.user.id });
+  // Optimistic: show topic immediately with a temp id
+  const tempId = `temp-${Date.now()}`;
+  topics.push({ id: tempId, text, created_by: session.user.id });
+  renderTopicList();
+  updateTopicCount();
 
-  if (error) console.error('Failed to add topic:', error.message);
+  const { data, error } = await supabase
+    .from('topics')
+    .insert({ board_id: boardId, text, created_by: session.user.id })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Failed to add topic:', error.message);
+    // Remove optimistic topic on failure
+    topics = topics.filter((t) => t.id !== tempId);
+    renderTopicList();
+    updateTopicCount();
+  } else {
+    // Replace temp id with real id
+    const t = topics.find((t) => t.id === tempId);
+    if (t) t.id = data.id;
+  }
   topicInput.focus();
 });
 
@@ -770,7 +794,7 @@ async function loadLeaderboard() {
 
   // Sort by wins descending
   const sorted = Object.entries(counts)
-    .map(([playerId, wins]) => ({ playerId: parseInt(playerId), wins }))
+    .map(([playerId, wins]) => ({ playerId, wins }))
     .sort((a, b) => b.wins - a.wins);
 
   leaderboardListEl.innerHTML = '';
