@@ -19,6 +19,10 @@
 
   <main class="board-main">
     <h1 id="board-name" class="board-name-hero"></h1>
+    <div id="game-timer" class="game-timer hidden">
+      <span class="timer-dot"></span>
+      <span id="timer-label" class="timer-label"></span>
+    </div>
 
     <!-- Inline Join Section -->
     <section id="join-section" class="join-card hidden">
@@ -77,8 +81,9 @@
     <!-- Play Mode -->
     <section id="play-section" class="play-section hidden">
       <div class="play-controls">
-        <button id="back-setup-btn" class="btn btn-small btn-secondary">&larr; Topics</button>
+        <button id="back-setup-btn" class="btn btn-small btn-secondary hidden">&larr; Topics</button>
         <button id="reshuffle-btn" class="btn btn-small btn-secondary">Reshuffle</button>
+        <button id="reset-game-btn" class="btn btn-small btn-reset hidden">Reset Game</button>
       </div>
 
       <!-- Your card -->

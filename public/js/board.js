@@ -28,6 +28,7 @@ const topicCountEl = document.getElementById('topic-count');
 const playBtn = document.getElementById('play-btn');
 const backSetupBtn = document.getElementById('back-setup-btn');
 const reshuffleBtn = document.getElementById('reshuffle-btn');
+const resetGameBtn = document.getElementById('reset-game-btn');
 const bingoGrid = document.getElementById('bingo-grid');
 const bingoOverlay = document.getElementById('bingo-overlay');
 const bingoWinnerEl = document.getElementById('bingo-winner');
@@ -47,6 +48,7 @@ let allPlayers = [];
 let otherCards = {};
 let selectedColor = null;
 let realtimeChannel = null;
+let boardCreatorId = null;
 
 // Debounce for card invalidation (trigger fires per-row)
 let invalidateTimer = null;
@@ -63,7 +65,7 @@ async function init() {
   // Load board
   const { data: board, error } = await supabase
     .from('boards')
-    .select('id, name, created_by')
+    .select('id, name, created_by, created_at')
     .eq('id', boardId)
     .single();
 
@@ -73,7 +75,9 @@ async function init() {
   }
 
   boardNameEl.textContent = board.name;
+  boardCreatorId = board.created_by;
   document.title = `${board.name} — Bull$hit Bingo`;
+  startGameTimer(board.created_at);
 
   // Load topics
   const { data: topicsData } = await supabase
@@ -99,11 +103,17 @@ async function init() {
   if (myPlayer) {
     await tryLoadMyCard();
     await loadOtherCards();
+    // If player exists but has no card yet and board has topics, generate one
+    if (!myCard && topics.length >= MIN_TOPICS) {
+      await enterPlayMode();
+    } else if (!myCard && !isCreator()) {
+      // Non-creator waiting for topics — show a waiting state
+      showWaiting();
+    }
   } else {
-    const isCreator = board.created_by === session.user.id;
     const profile = await getProfile(session.user.id);
 
-    if (isCreator && profile?.display_name) {
+    if (isCreator() && profile?.display_name) {
       // Auto-join board creators with their profile name + auto color
       await autoJoin(profile.display_name);
     } else {
@@ -119,10 +129,53 @@ async function init() {
   subscribeRealtime();
 }
 
+function isCreator() {
+  return session && boardCreatorId === session.user.id;
+}
+
 function showJoinSection() {
   joinSection.classList.remove('hidden');
   setupSection.classList.add('hidden');
   joinNameInput.focus();
+}
+
+function showWaiting() {
+  setupSection.classList.remove('hidden');
+  setupSection.innerHTML = '<p class="hint" style="text-align:center;padding:2rem 0;">Waiting for the host to finish setting up&hellip;</p>';
+}
+
+// --- Game Timer ---
+
+const gameTimerEl = document.getElementById('game-timer');
+const timerLabelEl = document.getElementById('timer-label');
+
+function startGameTimer(createdAt) {
+  const start = new Date(createdAt).getTime();
+  gameTimerEl.classList.remove('hidden');
+
+  function tick() {
+    const elapsed = Date.now() - start;
+    const secs = Math.floor(elapsed / 1000);
+    const mins = Math.floor(secs / 60);
+    const hrs = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+
+    let label;
+    if (days > 0) {
+      label = `${days}d ${hrs % 24}h — still going`;
+    } else if (hrs > 0) {
+      label = `${hrs}h ${mins % 60}m — still going`;
+    } else if (mins > 0) {
+      label = `${mins}m ${secs % 60}s`;
+    } else {
+      label = `${secs}s — just started`;
+    }
+
+    timerLabelEl.textContent = label;
+  }
+
+  tick();
+  setInterval(tick, 1000);
 }
 
 const AUTO_COLORS = ['#FF6B35', '#DAA520', '#6B8E23', '#B7410E', '#3b82f6', '#ec4899', '#06b6d4', '#D4A574'];
@@ -167,6 +220,10 @@ function subscribeRealtime() {
         topics.push(topic);
         renderTopicList();
         updateTopicCount();
+        // Auto-enter play for non-creators once enough topics exist
+        if (!isCreator() && myPlayer && !myCard && topics.length >= MIN_TOPICS) {
+          enterPlayMode();
+        }
       }
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'topics', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -179,6 +236,7 @@ function subscribeRealtime() {
       const player = payload.new;
       if (!allPlayers.find((p) => p.id === player.id)) {
         allPlayers.push(player);
+        renderOtherCards();
       }
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'player_cards', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -186,6 +244,10 @@ function subscribeRealtime() {
       if (row.player_id !== myPlayer?.id) {
         // Another player got a new card — fetch summary
         loadOtherCardFor(row.player_id);
+        // If we don't have a card yet, auto-generate ours (e.g. after a reset)
+        if (myPlayer && !myCard && !isCreator()) {
+          enterPlayMode();
+        }
       }
     })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'player_cards', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -215,8 +277,16 @@ function subscribeRealtime() {
         otherCards = {};
         renderOwnCard();
         renderOtherCards();
+        bingoOverlay.classList.add('hidden');
         if (!playSection.classList.contains('hidden')) {
-          enterSetupMode();
+          if (isCreator()) {
+            enterSetupMode();
+          } else {
+            // Non-creators wait — auto-rejoin when host generates new cards
+            playSection.classList.add('hidden');
+            setupSection.classList.remove('hidden');
+            setupSection.innerHTML = '<p class="hint" style="text-align:center;padding:2rem 0;">Game reset — waiting for the host to reshuffle&hellip;</p>';
+          }
         }
       }, 200);
     })
@@ -290,7 +360,15 @@ joinForm.addEventListener('submit', async (e) => {
     allPlayers.push(player);
   }
   joinSection.classList.add('hidden');
-  setupSection.classList.remove('hidden');
+
+  // Non-creators go straight to play (or wait); only creator sees setup
+  if (topics.length >= MIN_TOPICS) {
+    await enterPlayMode();
+  } else if (isCreator()) {
+    setupSection.classList.remove('hidden');
+  } else {
+    showWaiting();
+  }
 });
 
 // --- Topics ---
@@ -374,6 +452,12 @@ async function enterPlayMode() {
   setupSection.classList.add('hidden');
   playSection.classList.remove('hidden');
 
+  // Show host-only controls
+  if (isCreator()) {
+    backSetupBtn.classList.remove('hidden');
+    resetGameBtn.classList.remove('hidden');
+  }
+
   await loadOtherCards();
 }
 
@@ -385,6 +469,29 @@ function enterSetupMode() {
 playBtn.addEventListener('click', enterPlayMode);
 backSetupBtn.addEventListener('click', enterSetupMode);
 reshuffleBtn.addEventListener('click', enterPlayMode);
+
+resetGameBtn.addEventListener('click', async () => {
+  if (!isCreator()) return;
+  resetGameBtn.disabled = true;
+  resetGameBtn.textContent = 'Resetting...';
+
+  const res = await fetch('/api/reset-game', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ boardId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.error('Reset failed:', err.error);
+  }
+
+  resetGameBtn.disabled = false;
+  resetGameBtn.textContent = 'Reset Game';
+});
 
 // --- Own card rendering ---
 
