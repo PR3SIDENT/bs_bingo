@@ -16,19 +16,21 @@ const signOutBtn = document.getElementById('sign-out-btn');
 const createForm = document.getElementById('create-form');
 const joinForm = document.getElementById('join-form');
 
+// Landing page (index.html) has no forms — only /create does
+const hasAppForms = !!createForm;
+
 function isAnonymous(session) {
   return session?.user?.is_anonymous === true;
 }
 
 function updateUserUI(session, profile) {
+  if (!hasAppForms) return;
   if (session && !isAnonymous(session)) {
-    // Signed-in user: show user bar, hide sign-in prompt
     const displayName = profile?.display_name || session.user.email || 'Player';
     userNameEl.textContent = displayName;
     userBar.classList.remove('hidden');
     signInPrompt.classList.add('hidden');
   } else {
-    // Anonymous or no session: hide user bar, show sign-in prompt
     userBar.classList.add('hidden');
     signInPrompt.classList.remove('hidden');
   }
@@ -56,142 +58,145 @@ onAuthStateChange(async (session) => {
   }
 })();
 
-// Sign-in modal controls
-showSignInBtn.addEventListener('click', () => {
-  authModal.classList.remove('hidden');
-});
+// --- App form event listeners (only on /create page) ---
+if (hasAppForms) {
+  // Sign-in modal controls
+  showSignInBtn.addEventListener('click', () => {
+    authModal.classList.remove('hidden');
+  });
 
-closeAuthModalBtn.addEventListener('click', () => {
-  authModal.classList.add('hidden');
-});
+  closeAuthModalBtn.addEventListener('click', () => {
+    authModal.classList.add('hidden');
+  });
 
-authModal.addEventListener('click', (e) => {
-  if (e.target === authModal) authModal.classList.add('hidden');
-});
+  authModal.addEventListener('click', (e) => {
+    if (e.target === authModal) authModal.classList.add('hidden');
+  });
 
-// Google sign-in
-googleBtn.addEventListener('click', () => {
-  signInWithGoogle();
-});
+  // Google sign-in
+  googleBtn.addEventListener('click', () => {
+    signInWithGoogle();
+  });
 
-// Magic link
-magicForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = magicEmailInput.value.trim();
-  if (!email) return;
+  // Magic link
+  magicForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = magicEmailInput.value.trim();
+    if (!email) return;
 
-  const btn = magicForm.querySelector('button');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-  magicStatus.textContent = '';
+    const btn = magicForm.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    magicStatus.textContent = '';
 
-  const { error } = await signInWithMagicLink(email);
-  if (error) {
-    magicStatus.textContent = error.message;
-    magicStatus.style.color = '#f43f5e';
-  } else {
-    magicStatus.textContent = 'Check your email for a login link!';
-    magicStatus.style.color = '#22c55e';
+    const { error } = await signInWithMagicLink(email);
+    if (error) {
+      magicStatus.textContent = error.message;
+      magicStatus.style.color = '#f43f5e';
+    } else {
+      magicStatus.textContent = 'Check your email for a login link!';
+      magicStatus.style.color = '#22c55e';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Send Magic Link';
+  });
+
+  // Sign out
+  signOutBtn.addEventListener('click', () => signOut());
+
+  // Inline name editing
+  userNameEl.addEventListener('click', () => {
+    userNameInput.value = userNameEl.textContent;
+    userNameEl.classList.add('hidden');
+    userNameInput.classList.remove('hidden');
+    userNameInput.focus();
+    userNameInput.select();
+  });
+
+  async function saveName() {
+    const newName = userNameInput.value.trim();
+    userNameInput.classList.add('hidden');
+    userNameEl.classList.remove('hidden');
+
+    if (!newName || newName === userNameEl.textContent) return;
+
+    const session = await getSession();
+    if (!session) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ display_name: newName })
+      .eq('id', session.user.id);
+
+    if (error) {
+      console.error('Failed to update name:', error.message);
+      return;
+    }
+    userNameEl.textContent = newName;
   }
-  btn.disabled = false;
-  btn.textContent = 'Send Magic Link';
-});
 
-// Sign out
-signOutBtn.addEventListener('click', () => signOut());
+  userNameInput.addEventListener('blur', saveName);
+  userNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); userNameInput.blur(); }
+    if (e.key === 'Escape') { userNameInput.classList.add('hidden'); userNameEl.classList.remove('hidden'); }
+  });
 
-// Inline name editing
-userNameEl.addEventListener('click', () => {
-  userNameInput.value = userNameEl.textContent;
-  userNameEl.classList.add('hidden');
-  userNameInput.classList.remove('hidden');
-  userNameInput.focus();
-  userNameInput.select();
-});
+  // Create board
+  createForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('board-name').value.trim();
+    if (!name) return;
 
-async function saveName() {
-  const newName = userNameInput.value.trim();
-  userNameInput.classList.add('hidden');
-  userNameEl.classList.remove('hidden');
+    const btn = createForm.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
 
-  if (!newName || newName === userNameEl.textContent) return;
+    const session = await ensureSession();
+    if (!session) {
+      btn.disabled = false;
+      btn.textContent = 'Create Board';
+      return;
+    }
 
-  const session = await getSession();
-  if (!session) return;
+    // Generate short ID
+    const id = crypto.randomUUID().split('-')[0];
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({ display_name: newName })
-    .eq('id', session.user.id);
+    const { data, error } = await supabase
+      .from('boards')
+      .insert({ id, name, created_by: session.user.id })
+      .select()
+      .single();
 
-  if (error) {
-    console.error('Failed to update name:', error.message);
-    return;
-  }
-  userNameEl.textContent = newName;
+    if (error) {
+      console.error('Failed to create board:', error.message, error);
+      btn.disabled = false;
+      btn.textContent = "Let's Go";
+      return;
+    }
+
+    console.log('Board created:', data);
+    window.location.href = `/${id}`;
+  });
+
+  // Join board
+  joinForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('board-code').value.trim();
+    if (!input) return;
+
+    let code = input;
+    try {
+      const url = new URL(input);
+      code = url.pathname.replace(/^\//, '');
+    } catch {
+      // Not a URL, use as-is
+    }
+
+    if (code) {
+      window.location.href = `/${code}`;
+    }
+  });
 }
-
-userNameInput.addEventListener('blur', saveName);
-userNameInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); userNameInput.blur(); }
-  if (e.key === 'Escape') { userNameInput.classList.add('hidden'); userNameEl.classList.remove('hidden'); }
-});
-
-// Create board
-createForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name = document.getElementById('board-name').value.trim();
-  if (!name) return;
-
-  const btn = createForm.querySelector('button');
-  btn.disabled = true;
-  btn.textContent = 'Creating...';
-
-  const session = await ensureSession();
-  if (!session) {
-    btn.disabled = false;
-    btn.textContent = 'Create Board';
-    return;
-  }
-
-  // Generate short ID
-  const id = crypto.randomUUID().split('-')[0];
-
-  const { data, error } = await supabase
-    .from('boards')
-    .insert({ id, name, created_by: session.user.id })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Failed to create board:', error.message, error);
-    btn.disabled = false;
-    btn.textContent = "Let's Go";
-    return;
-  }
-
-  console.log('Board created:', data);
-  window.location.href = `/${id}`;
-});
-
-// Join board
-joinForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const input = document.getElementById('board-code').value.trim();
-  if (!input) return;
-
-  let code = input;
-  try {
-    const url = new URL(input);
-    code = url.pathname.replace(/^\//, '');
-  } catch {
-    // Not a URL, use as-is
-  }
-
-  if (code) {
-    window.location.href = `/${code}`;
-  }
-});
 
 // ========== Quote Wall ==========
 const featuredQuotes = new Set([

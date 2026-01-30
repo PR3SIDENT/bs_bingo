@@ -591,15 +591,8 @@ input[type="email"]:focus {
 .site-footer-text {
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: var(--tan);
-  margin-bottom: var(--space-2);
-}
-
-.site-footer-brand {
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: rgba(255, 248, 231, 0.3);
+  font-style: italic;
+  color: rgba(212, 165, 116, 0.4);
 }
 
 /* === Scroll Reveal Animations === */
