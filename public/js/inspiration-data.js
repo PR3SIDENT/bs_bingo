@@ -1,0 +1,76 @@
+export const INSPIRATION_CATEGORIES = [
+  {
+    name: 'Classic Family Dinner',
+    quotes: [
+      'When are you having kids?',
+      'Are you still single?',
+      'You\'re not getting any younger.',
+      'Back in my day...',
+      'Kids these days...',
+      'You should buy a house.',
+      'Have you gained weight?',
+      'When I was your age...',
+      'You look tired.',
+      'Why don\'t you call more?',
+      'So what\'s your plan?',
+    ],
+  },
+  {
+    name: 'Unsolicited Advice',
+    quotes: [
+      'Have you tried yoga?',
+      'You just need to manifest it.',
+      'It\'s all about mindset.',
+      'Sleep when you\'re dead.',
+      'Just be positive!',
+      'You should start a podcast.',
+      'My trainer says...',
+    ],
+  },
+  {
+    name: 'The Conspiracies',
+    quotes: [
+      'Do your own research.',
+      'Wake up, sheeple.',
+      'Follow the money.',
+      'Think about it.',
+      'I saw on Facebook...',
+      'They don\'t want you to know.',
+      'It\'s all connected.',
+      'That\'s what they want you to think.',
+    ],
+  },
+  {
+    name: 'Office BS',
+    quotes: [
+      'Let\'s circle back.',
+      'Per my last email...',
+      'We\'re like a family here.',
+      'Synergy.',
+      'Quick question.',
+      'Let\'s take this offline.',
+      'Nobody wants to work anymore.',
+    ],
+  },
+  {
+    name: 'The Humble Brags',
+    quotes: [
+      'I\'m SO busy.',
+      'I barely slept.',
+      'I ran a half-marathon this morning.',
+      'My house cleaner cancelled again.',
+      'My therapist says I\'m too ambitious.',
+      'I forgot to eat today.',
+    ],
+  },
+  {
+    name: 'Relationship Classics',
+    quotes: [
+      'It is what it is.',
+      'We need to talk.',
+      'I\'m not mad, I\'m disappointed.',
+      'Whatever you want.',
+      'I just think it\'s funny how...',
+    ],
+  },
+];

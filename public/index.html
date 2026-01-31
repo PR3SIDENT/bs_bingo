@@ -18,24 +18,32 @@
       <!-- Floating quotes background -->
       <div class="floating-quotes" id="floating-quotes" aria-hidden="true"></div>
 
-      <h1 class="hero-logo">Bull<span class="accent">$</span>hit<span class="accent">!</span> Bingo</h1>
+      <h1 class="hero-logo">
+        <span class="bingo-icon-logo" aria-hidden="true">
+          <span class="bil-cell"></span>
+          <span class="bil-cell bil-marked"></span>
+          <span class="bil-cell"></span>
+          <span class="bil-cell bil-marked"></span>
+          <span class="bil-cell"></span>
+          <span class="bil-cell bil-marked"></span>
+          <span class="bil-cell"></span>
+          <span class="bil-cell bil-marked"></span>
+          <span class="bil-cell"></span>
+        </span>
+        <span class="hero-logo-text">
+          <span class="hero-logo-top">Bull<span class="accent">$</span>hit<span class="accent">!</span></span>
+          <span class="hero-logo-bottom">Bingo</span>
+        </span>
+      </h1>
 
-      <p class="hero-headline">Every
+      <p class="hero-headline">For the stuff your
         <span class="flipper" id="flipper"><span class="flipper-text active">family</span><span class="flipper-text">friend group</span><span class="flipper-text">coworker</span><span class="flipper-text">uncle</span><span class="flipper-text">roommate</span><span class="flipper-text">in-law</span><span class="flipper-text">dad</span><span class="flipper-text">neighbor</span><span class="flipper-text">boss</span><span class="flipper-text">group chat</span></span>
-        has a script.</p>
-      <p class="hero-subtitle">Might as well make it a game.</p>
+        always says.</p>
 
-      <a href="/create" class="btn btn-primary hero-cta">Build Your Board</a>
+      <a href="/create" class="btn btn-primary hero-cta">Build Your Card</a>
 
-      <p class="hero-footer">You're on someone's board too.</p>
+      <p class="hero-subtitle" style="margin-top:var(--space-6);margin-bottom:0">You have to hear it, may as well make it a game, right?</p>
 
-      <!-- Scroll indicator -->
-      <div class="scroll-hint" aria-hidden="true">
-        <span class="scroll-hint-text">Scroll</span>
-        <svg class="scroll-hint-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M10 4 L10 14 M5 10 L10 15 L15 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
     </section>
 
     <!-- ====== 2. How It Works ====== -->
@@ -45,7 +53,7 @@
         <div class="step-card reveal">
           <span class="step-number">1</span>
           <h3 class="step-title">Pick your person</h3>
-          <p class="step-desc">Your uncle. Your boss. Your roommate. You know exactly who.</p>
+          <p class="step-desc">You already have <em>someone</em> in mind. Don't pretend you don't.</p>
         </div>
         <div class="step-connector reveal" aria-hidden="true">
           <svg width="40" height="24" viewBox="0 0 40 24" fill="none"><path d="M0 12h32m0 0l-7-7m7 7l-7 7" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -53,7 +61,7 @@
         <div class="step-card reveal">
           <span class="step-number">2</span>
           <h3 class="step-title">Add their greatest hits</h3>
-          <p class="step-desc">All the things they <em>always</em> say. You could write the script yourself.</p>
+          <p class="step-desc">You could finish their <em>sentences</em> by now. Add them all.</p>
         </div>
         <div class="step-connector reveal" aria-hidden="true">
           <svg width="40" height="24" viewBox="0 0 40 24" fill="none"><path d="M0 12h32m0 0l-7-7m7 7l-7 7" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -61,7 +69,15 @@
         <div class="step-card reveal">
           <span class="step-number">3</span>
           <h3 class="step-title">Play together</h3>
-          <p class="step-desc">Share the board. Mark squares in real time. First to bingo wins.</p>
+          <p class="step-desc">Send the link. Mark squares as they <em>deliver</em>. First to bingo wins.</p>
+        </div>
+        <div class="step-connector reveal" aria-hidden="true">
+          <svg width="40" height="24" viewBox="0 0 40 24" fill="none"><path d="M0 12h32m0 0l-7-7m7 7l-7 7" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="step-card reveal">
+          <span class="step-number">4</span>
+          <h3 class="step-title">Keep score</h3>
+          <p class="step-desc">Reset the board, run it <em>again</em>. They're not going to stop, so why should you?</p>
         </div>
       </div>
     </section>
@@ -108,7 +124,7 @@
 
     <!-- ====== 4. Footer ====== -->
     <footer class="site-footer">
-      <p class="site-footer-text">...you're on someone's board too.</p>
+      <p class="site-footer-text">made for friends with love by Cory Niblett (PR3SIDENT) <a href="mailto:contact@n1bz.io" class="footer-link">contact@n1bz.io</a></p>
     </footer>
 
   </main>

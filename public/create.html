@@ -12,9 +12,30 @@
 <body>
 
   <main class="home">
-    <section class="action-section action-section--full">
+    <section class="action-section action-section--full" style="overflow: hidden;">
+      <!-- Floating quotes background — populated by JS -->
+      <div id="create-quotes" class="floating-quotes"></div>
+
       <div class="home-card">
-        <a href="/" class="create-logo">Bull<span class="accent">$</span>hit<span class="accent">!</span> Bingo</a>
+        <a href="/" class="create-logo">
+          <span class="create-logo-inner">
+            <span class="bingo-icon-logo bingo-icon-logo--sm" aria-hidden="true">
+              <span class="bil-cell"></span>
+              <span class="bil-cell bil-marked"></span>
+              <span class="bil-cell"></span>
+              <span class="bil-cell"></span>
+              <span class="bil-cell bil-marked"></span>
+              <span class="bil-cell"></span>
+              <span class="bil-cell bil-marked"></span>
+              <span class="bil-cell"></span>
+              <span class="bil-cell bil-marked"></span>
+            </span>
+            <span class="create-logo-text">
+              <span class="create-logo-top">Bull<span class="accent">$</span>hit<span class="accent">!</span></span>
+              <span class="create-logo-bottom">Bingo</span>
+            </span>
+          </span>
+        </a>
 
         <!-- User bar: shown for signed-in users -->
         <div id="user-bar" class="user-bar hidden">
@@ -25,6 +46,14 @@
 
         <!-- App Section: always visible -->
         <div id="app-section">
+          <p class="create-instructions">
+            Make a board to track the
+            <span class="flipper" id="create-flipper">
+              <span class="flipper-sizer" aria-hidden="true">loathsome</span>
+              <span class="flipper-text active">redundant</span>
+            </span>
+            shit someone says. We'll turn it into a bingo card for you and your friends.
+          </p>
           <form id="create-form" class="create-form">
             <input
               type="text"
@@ -34,6 +63,13 @@
               autocomplete="off"
               required
               autofocus
+            >
+            <input
+              type="text"
+              id="creator-name"
+              placeholder="Your name"
+              maxlength="20"
+              autocomplete="off"
             >
             <button type="submit" class="btn btn-primary">Let's Go</button>
           </form>

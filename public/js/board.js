@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { getSession, getProfile, ensureSession, signOut } from './auth.js';
+import { INSPIRATION_CATEGORIES } from './inspiration-data.js';
 
 const boardId = window.location.pathname.replace(/^\//, '');
 
@@ -44,6 +45,7 @@ const leaderboardListEl = document.getElementById('leaderboard-list');
 const rewardRow = document.getElementById('reward-row');
 const rewardInput = document.getElementById('reward-input');
 const rewardDisplay = document.getElementById('reward-display');
+const playerRosterEl = document.getElementById('player-roster');
 
 let session = null;
 let topics = [];
@@ -56,6 +58,13 @@ let realtimeChannel = null;
 let boardCreatorId = null;
 let boardReward = null;
 let rewardSaveTimer = null;
+let activeInspirationCategory = null;
+
+// Inspiration DOM refs
+const inspirationToggle = document.getElementById('inspiration-toggle');
+const inspirationBody = document.getElementById('inspiration-body');
+const inspirationPills = document.getElementById('inspiration-pills');
+const inspirationChips = document.getElementById('inspiration-chips');
 
 // Debounce for card invalidation (trigger fires per-row)
 let invalidateTimer = null;
@@ -81,7 +90,7 @@ async function init() {
     return;
   }
 
-  boardNameEl.textContent = `${board.name}'s Bull$hit Bingo`;
+  boardNameEl.innerHTML = `What does <span class="board-name-highlight">${escapeHtml(board.name)}</span> always say?`;
   boardCreatorId = board.created_by;
   boardReward = board.reward || '';
   document.title = `${board.name}'s Bull$hit Bingo`;
@@ -107,6 +116,7 @@ async function init() {
     .eq('board_id', boardId)
     .order('created_at', { ascending: true });
   allPlayers = playersData || [];
+  renderPlayerRoster();
 
   // Load leaderboard (after players so names resolve)
   await loadLeaderboard();
@@ -126,18 +136,23 @@ async function init() {
     }
   } else {
     const profile = await getProfile(session.user.id);
+    let pendingName = null;
+    try { pendingName = localStorage.getItem('pending_name'); } catch {}
+    const bestName = pendingName || profile?.display_name || '';
 
-    if (isCreator() && profile?.display_name) {
-      // Auto-join board creators with their profile name + auto color
-      await autoJoin(profile.display_name);
+    if (isCreator() && bestName) {
+      // Auto-join creator with their name, clear localStorage
+      await autoJoin(bestName);
+      try { localStorage.removeItem('pending_name'); } catch {}
       showSetupForEveryone();
+    } else if (!isCreator() && bestName) {
+      // Non-creator with a name: pre-fill join input, show join + setup
+      joinNameInput.value = bestName;
+      updateJoinButton();
+      showJoinWithSetup();
     } else {
-      // Pre-fill name for signed-in non-creators
-      if (profile?.display_name) {
-        joinNameInput.value = profile.display_name;
-        updateJoinButton();
-      }
-      showJoinSection();
+      // No name available: show join bar + setup
+      showJoinWithSetup();
     }
   }
 
@@ -147,12 +162,28 @@ async function init() {
 
 function revealPage() {
   const main = document.querySelector('.board-main');
-  main.style.transition = 'opacity 0.15s ease';
+  main.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+  main.style.transform = 'translateY(0)';
   main.style.opacity = '1';
 }
 
 function isCreator() {
   return session && boardCreatorId === session.user.id;
+}
+
+function renderPlayerRoster() {
+  playerRosterEl.innerHTML = '';
+  if (allPlayers.length === 0) {
+    playerRosterEl.innerHTML = '<span class="roster-empty">No players yet</span>';
+    return;
+  }
+  allPlayers.forEach((player) => {
+    const chip = document.createElement('span');
+    const isYou = myPlayer && player.id === myPlayer.id;
+    chip.className = 'roster-chip' + (isYou ? ' roster-chip--you' : '');
+    chip.innerHTML = `<span class="player-dot" style="background:${player.color}"></span>${escapeHtml(player.name)}${isYou ? ' (you)' : ''}`;
+    playerRosterEl.appendChild(chip);
+  });
 }
 
 function showJoinSection() {
@@ -171,6 +202,22 @@ function showSetupForEveryone() {
     waitingHostEl.classList.remove('hidden');
   }
   updateTopicCount();
+  initInspiration();
+}
+
+function showJoinWithSetup() {
+  joinSection.classList.remove('hidden');
+  setupSection.classList.remove('hidden');
+  if (isCreator()) {
+    playBtn.classList.remove('hidden');
+    waitingHostEl.classList.add('hidden');
+  } else {
+    playBtn.classList.add('hidden');
+    waitingHostEl.classList.remove('hidden');
+  }
+  updateTopicCount();
+  joinNameInput.focus();
+  initInspiration();
 }
 
 // --- Game Timer ---
@@ -236,6 +283,7 @@ async function autoJoin(name) {
   if (!allPlayers.find((p) => p.id === player.id)) {
     allPlayers.push(player);
   }
+  renderPlayerRoster();
 }
 
 // --- Realtime ---
@@ -253,6 +301,7 @@ function subscribeRealtime() {
         topics.push(topic);
         renderTopicList();
         updateTopicCount();
+        renderQuoteChips();
       }
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'topics', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -260,12 +309,14 @@ function subscribeRealtime() {
       topics = topics.filter((t) => t.id !== id);
       renderTopicList();
       updateTopicCount();
+      renderQuoteChips();
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `board_id=eq.${boardId}` }, (payload) => {
       const player = payload.new;
       if (!allPlayers.find((p) => p.id === player.id)) {
         allPlayers.push(player);
         updateTopicCount();
+        renderPlayerRoster();
         renderOtherCards();
       }
     })
@@ -390,7 +441,17 @@ joinForm.addEventListener('submit', async (e) => {
   if (!allPlayers.find((p) => p.id === player.id)) {
     allPlayers.push(player);
   }
-  joinSection.classList.add('hidden');
+  renderPlayerRoster();
+
+  // Animate join bar out
+  joinSection.style.transition = 'opacity 0.3s ease, max-height 0.3s ease';
+  joinSection.style.opacity = '0';
+  joinSection.style.maxHeight = '0';
+  joinSection.style.overflow = 'hidden';
+  setTimeout(() => {
+    joinSection.classList.add('hidden');
+    joinSection.style.cssText = '';
+  }, 300);
 
   // If game is already running (other players have cards), jump straight in
   const { count } = await supabase
@@ -847,6 +908,99 @@ function updateRewardDisplay() {
     rewardDisplay.classList.remove('hidden');
   } else {
     rewardDisplay.classList.add('hidden');
+  }
+}
+
+// --- Inspiration ---
+
+let inspirationInitialized = false;
+
+function initInspiration() {
+  if (inspirationInitialized) return;
+  inspirationInitialized = true;
+
+  inspirationToggle.addEventListener('click', () => {
+    const isOpen = !inspirationBody.classList.contains('hidden');
+    if (isOpen) {
+      inspirationBody.classList.add('hidden');
+      inspirationToggle.textContent = 'Need ideas?';
+    } else {
+      inspirationBody.classList.remove('hidden');
+      inspirationToggle.textContent = 'Hide ideas';
+      if (!activeInspirationCategory) {
+        activeInspirationCategory = INSPIRATION_CATEGORIES[0].name;
+      }
+      renderCategoryPills();
+      renderQuoteChips();
+    }
+  });
+}
+
+function renderCategoryPills() {
+  inspirationPills.innerHTML = '';
+  INSPIRATION_CATEGORIES.forEach((cat) => {
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'inspiration-pill' + (cat.name === activeInspirationCategory ? ' inspiration-pill--active' : '');
+    pill.textContent = cat.name;
+    pill.addEventListener('click', () => {
+      activeInspirationCategory = cat.name;
+      renderCategoryPills();
+      renderQuoteChips();
+    });
+    inspirationPills.appendChild(pill);
+  });
+}
+
+function renderQuoteChips() {
+  if (!activeInspirationCategory) return;
+  const cat = INSPIRATION_CATEGORIES.find((c) => c.name === activeInspirationCategory);
+  if (!cat) return;
+
+  const existingTexts = new Set(topics.map((t) => t.text.toLowerCase()));
+  inspirationChips.innerHTML = '';
+
+  cat.quotes.forEach((quote) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    const isUsed = existingTexts.has(quote.toLowerCase());
+    chip.className = 'inspiration-chip' + (isUsed ? ' inspiration-chip--used' : '');
+    chip.textContent = quote;
+    if (!isUsed) {
+      chip.addEventListener('click', () => addInspirationTopic(quote, chip));
+    }
+    inspirationChips.appendChild(chip);
+  });
+}
+
+async function addInspirationTopic(text, chipEl) {
+  if (!myPlayer) return;
+
+  // Optimistic: mark chip as used
+  chipEl.classList.add('inspiration-chip--used');
+  chipEl.replaceWith(chipEl.cloneNode(true)); // Remove listener
+
+  // Optimistic: add topic immediately
+  const tempId = `temp-${Date.now()}`;
+  topics.push({ id: tempId, text, created_by: session.user.id });
+  renderTopicList();
+  updateTopicCount();
+
+  const { data, error } = await supabase
+    .from('topics')
+    .insert({ board_id: boardId, text, created_by: session.user.id })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Failed to add inspiration topic:', error.message);
+    topics = topics.filter((t) => t.id !== tempId);
+    renderTopicList();
+    updateTopicCount();
+    renderQuoteChips();
+  } else {
+    const t = topics.find((t) => t.id === tempId);
+    if (t) t.id = data.id;
   }
 }
 

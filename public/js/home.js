@@ -15,9 +15,12 @@ const userNameInput = document.getElementById('user-name-input');
 const signOutBtn = document.getElementById('sign-out-btn');
 const createForm = document.getElementById('create-form');
 const joinForm = document.getElementById('join-form');
+const creatorNameInput = document.getElementById('creator-name');
 
 // Landing page (index.html) has no forms — only /create does
 const hasAppForms = !!createForm;
+
+let currentProfile = null;
 
 function isAnonymous(session) {
   return session?.user?.is_anonymous === true;
@@ -52,7 +55,12 @@ onAuthStateChange(async (session) => {
   const session = await ensureSession();
   if (session && !isAnonymous(session)) {
     const profile = await getProfile(session.user.id);
+    currentProfile = profile;
     updateUserUI(session, profile);
+    // Hide creator name input if user already has a display name
+    if (creatorNameInput && profile?.display_name) {
+      creatorNameInput.classList.add('hidden');
+    }
   } else {
     updateUserUI(session, null);
   }
@@ -158,6 +166,13 @@ if (hasAppForms) {
       return;
     }
 
+    // Store pending name for auto-join on board page
+    const creatorName = creatorNameInput ? creatorNameInput.value.trim() : '';
+    const pendingName = creatorName || currentProfile?.display_name || '';
+    if (pendingName) {
+      try { localStorage.setItem('pending_name', pendingName); } catch {}
+    }
+
     // Generate short ID
     const id = crypto.randomUUID().split('-')[0];
 
@@ -175,6 +190,15 @@ if (hasAppForms) {
     }
 
     console.log('Board created:', data);
+
+    // Smooth fade-out before navigating
+    const main = document.querySelector('.home');
+    if (main) {
+      main.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+      main.style.opacity = '0';
+      main.style.transform = 'scale(0.98)';
+      await new Promise((r) => setTimeout(r, 350));
+    }
     window.location.href = `/${id}`;
   });
 
@@ -204,13 +228,12 @@ const featuredQuotes = new Set([
   "Nobody wants to work anymore.",
   "Do your own research.",
   "Are you still single?",
-  "Wake up, sheeple.",
   "We're like a family here.",
+  "I'm not mad, I'm disappointed.",
 ]);
 
 const allQuotes = [
   "Back in my day...",
-  "You look tired.",
   "When are you having kids?",
   "Nobody wants to work anymore.",
   "You should buy a house.",
@@ -218,32 +241,32 @@ const allQuotes = [
   "Have you tried yoga?",
   "Sleep when you're dead.",
   "Do your own research.",
-  "Let's circle back.",
   "Per my last email...",
-  "I'm SO busy.",
   "Are you still single?",
-  "It is what it is.",
-  "Follow the money.",
-  "Think about it.",
   "We're like a family here.",
   "You're not getting any younger.",
   "Kids these days...",
   "Wake up, sheeple.",
-  "Synergy.",
-  "Quick question.",
   "I barely slept.",
-  "My trainer says...",
-  "It's all about mindset.",
+  "I'm not mad, I'm disappointed.",
+  "Just be positive!",
+  "That's what they want you to think.",
+  "I forgot to eat today.",
+  "I just think it's funny how...",
+  "Whatever you want.",
+  "They don't want you to know.",
+  "When I was your age...",
+  "You should start a podcast.",
+  "Not political, but...",
 ];
 
-const fqContainer = document.getElementById('floating-quotes');
-if (fqContainer) {
+function populateQuotes(container) {
   const shuffled = [...allQuotes].sort(() => Math.random() - 0.5);
 
   shuffled.forEach((text, i) => {
     const el = document.createElement('span');
     const isFeatured = featuredQuotes.has(text);
-    const isAmber = i % 6 === 0;
+    const isAmber = i % 3 === 0;
     const sizeClass = isFeatured ? 'fq--xl' : ['fq--sm', '', '', 'fq--lg'][i % 4];
 
     el.className = 'fq'
@@ -251,9 +274,20 @@ if (fqContainer) {
       + (isAmber ? ' fq--amber' : '');
     el.textContent = text;
     el.style.setProperty('--fq-d', (i * 0.04) + 's');
-    fqContainer.appendChild(el);
+    // Slow drift after appear
+    const driftDuration = 6 + (i % 5) * 2; // 6-14s varied
+    const driftDelay = (i * 0.04) + 0.5; // after appear finishes
+    el.style.setProperty('--fq-drift', driftDuration + 's');
+    el.style.setProperty('--fq-drift-d', driftDelay + 's');
+    container.appendChild(el);
   });
 }
+
+const fqContainer = document.getElementById('floating-quotes');
+if (fqContainer) populateQuotes(fqContainer);
+
+const createQuotesContainer = document.getElementById('create-quotes');
+if (createQuotesContainer) populateQuotes(createQuotesContainer);
 
 // ========== Landing Page Animations ==========
 
@@ -276,16 +310,36 @@ if (revealEls.length) {
 }
 
 // --- Flipper: word rotation with sizer ---
-const flipper = document.getElementById('flipper');
-if (flipper) {
-  const texts = flipper.querySelectorAll('.flipper-text');
+function initFlipper(el, words) {
+  if (!el) return;
+
+  // If a word list is provided, generate the flipper-text spans dynamically
+  if (words) {
+    const sizer = el.querySelector('.flipper-sizer');
+    const existingTexts = el.querySelectorAll('.flipper-text');
+    existingTexts.forEach(t => t.remove());
+
+    words.forEach((w, i) => {
+      const span = document.createElement('span');
+      span.className = 'flipper-text' + (i === 0 ? ' active' : '');
+      span.textContent = w;
+      el.appendChild(span);
+    });
+
+    if (sizer) sizer.textContent = words[0];
+  }
+
+  const texts = el.querySelectorAll('.flipper-text');
   let current = 0;
 
-  // Create an invisible sizer span that holds the container width
-  const sizer = document.createElement('span');
-  sizer.className = 'flipper-sizer';
-  sizer.textContent = texts[current].textContent;
-  flipper.prepend(sizer);
+  // Create an invisible sizer span if one doesn't exist
+  let sizer = el.querySelector('.flipper-sizer');
+  if (!sizer) {
+    sizer = document.createElement('span');
+    sizer.className = 'flipper-sizer';
+    sizer.textContent = texts[current].textContent;
+    el.prepend(sizer);
+  }
 
   setInterval(() => {
     const prev = current;
@@ -296,6 +350,15 @@ if (flipper) {
     texts[current].classList.add('active');
   }, 2400);
 }
+
+// Landing page flipper
+initFlipper(document.getElementById('flipper'));
+
+// Create page flipper
+initFlipper(document.getElementById('create-flipper'), [
+  'redundant', 'mundane', 'annoying', 'repetitive',
+  'loathsome', 'predictable', 'exhausting', 'insufferable'
+]);
 
 // --- Example card auto-marking ---
 const demoGrid = document.getElementById('demo-grid');
