@@ -27,7 +27,6 @@ const topicInput = document.getElementById('topic-input');
 const topicListEl = document.getElementById('topic-list');
 const topicCountEl = document.getElementById('topic-count');
 const playBtn = document.getElementById('play-btn');
-const backSetupBtn = document.getElementById('back-setup-btn');
 const resetGameBtn = document.getElementById('reset-game-btn');
 const bingoGrid = document.getElementById('bingo-grid');
 const bingoOverlay = document.getElementById('bingo-overlay');
@@ -40,8 +39,6 @@ const joinSubmitBtn = document.getElementById('join-submit-btn');
 const myCardLabel = document.getElementById('my-card-label');
 const otherPlayersEl = document.getElementById('other-players');
 const waitingHostEl = document.getElementById('waiting-host');
-const leaderboardSection = document.getElementById('leaderboard-section');
-const leaderboardListEl = document.getElementById('leaderboard-list');
 const rewardRow = document.getElementById('reward-row');
 const rewardInput = document.getElementById('reward-input');
 const rewardDisplay = document.getElementById('reward-display');
@@ -59,6 +56,7 @@ let boardCreatorId = null;
 let boardReward = null;
 let rewardSaveTimer = null;
 let activeInspirationCategory = null;
+let winCounts = {};
 
 // Inspiration DOM refs
 const inspirationPills = document.getElementById('inspiration-pills');
@@ -171,19 +169,17 @@ function isCreator() {
 
 function renderPlayerRoster() {
   playerRosterEl.innerHTML = '';
-  const label = document.createElement('span');
-  label.className = 'roster-label';
-  label.textContent = 'Players in your game';
-  playerRosterEl.appendChild(label);
   if (allPlayers.length === 0) {
-    playerRosterEl.innerHTML += '<span class="roster-empty">No players yet</span>';
+    playerRosterEl.innerHTML = '<span class="roster-empty">No players yet</span>';
     return;
   }
   allPlayers.forEach((player) => {
     const chip = document.createElement('span');
     const isYou = myPlayer && player.id === myPlayer.id;
     chip.className = 'roster-chip' + (isYou ? ' roster-chip--you' : '');
-    chip.innerHTML = `<span class="player-dot" style="background:${player.color}"></span>${escapeHtml(player.name)}${isYou ? ' (you)' : ''}`;
+    const wins = winCounts[player.id] || 0;
+    const winBadge = wins > 0 ? `<span class="roster-divider">|</span><span class="roster-wins">Wins: ${wins}</span>` : '';
+    chip.innerHTML = `<span class="player-dot" style="background:${player.color}"></span>${escapeHtml(player.name)}${isYou ? ' (you)' : ''}${winBadge}`;
     playerRosterEl.appendChild(chip);
   });
 }
@@ -209,17 +205,16 @@ function showSetupForEveryone() {
 
 function showJoinWithSetup() {
   joinSection.classList.remove('hidden');
-  setupSection.classList.remove('hidden');
   if (isCreator()) {
+    // Creator still needs to see setup to add topics
+    setupSection.classList.remove('hidden');
     playBtn.classList.remove('hidden');
     waitingHostEl.classList.add('hidden');
-  } else {
-    playBtn.classList.add('hidden');
-    waitingHostEl.classList.remove('hidden');
+    updateTopicCount();
+    initInspiration();
   }
-  updateTopicCount();
+  // Non-creators just see the join bar until they join
   joinNameInput.focus();
-  initInspiration();
 }
 
 // --- Game Timer ---
@@ -362,13 +357,8 @@ function subscribeRealtime() {
         renderOtherCards();
         bingoOverlay.classList.add('hidden');
         if (!playSection.classList.contains('hidden')) {
-          if (isCreator()) {
-            enterSetupMode();
-          } else {
-            // Non-creators go back to setup — auto-rejoin when host generates new cards
-            playSection.classList.add('hidden');
-            showSetupForEveryone();
-          }
+          playSection.classList.add('hidden');
+          showSetupForEveryone();
         }
       }, 200);
     })
@@ -593,23 +583,39 @@ async function enterPlayMode() {
 
   // Show host-only controls
   if (isCreator()) {
-    backSetupBtn.classList.remove('hidden');
     resetGameBtn.classList.remove('hidden');
   }
 
   await loadOtherCards();
 }
 
-function enterSetupMode() {
-  setupSection.classList.remove('hidden');
-  playSection.classList.add('hidden');
+playBtn.addEventListener('click', enterPlayMode);
+
+let resetConfirmPending = false;
+
+function clearResetConfirm() {
+  resetConfirmPending = false;
+  resetGameBtn.textContent = 'Reset';
+  resetGameBtn.classList.remove('btn-reset--confirm');
 }
 
-playBtn.addEventListener('click', enterPlayMode);
-backSetupBtn.addEventListener('click', enterSetupMode);
+document.addEventListener('click', (e) => {
+  if (resetConfirmPending && !e.target.closest('#reset-game-btn')) {
+    clearResetConfirm();
+  }
+});
 
 resetGameBtn.addEventListener('click', async () => {
   if (!isCreator()) return;
+
+  if (!resetConfirmPending) {
+    resetConfirmPending = true;
+    resetGameBtn.textContent = 'Are you sure?';
+    resetGameBtn.classList.add('btn-reset--confirm');
+    return;
+  }
+
+  clearResetConfirm();
   resetGameBtn.disabled = true;
   resetGameBtn.textContent = 'Resetting...';
 
@@ -632,11 +638,12 @@ resetGameBtn.addEventListener('click', async () => {
     renderOwnCard();
     renderOtherCards();
     bingoOverlay.classList.add('hidden');
-    enterSetupMode();
+    playSection.classList.add('hidden');
+    showSetupForEveryone();
   }
 
   resetGameBtn.disabled = false;
-  resetGameBtn.textContent = 'Reset Game';
+  resetGameBtn.textContent = 'Reset';
 });
 
 // --- Own card rendering ---
@@ -755,6 +762,10 @@ async function tryLoadMyCard() {
   renderOwnCard();
   setupSection.classList.add('hidden');
   playSection.classList.remove('hidden');
+
+  if (isCreator()) {
+    resetGameBtn.classList.remove('hidden');
+  }
 }
 
 function renderOtherCards() {
@@ -823,26 +834,73 @@ function renderMiniCard(playerId) {
 
 // --- Bingo Overlay ---
 
+const overlayResetBtn = document.getElementById('overlay-reset-btn');
+
 function showBingoOverlay(playerName, playerColor) {
   bingoWinnerEl.innerHTML = `<span class="player-dot big" style="background:${playerColor}"></span> ${escapeHtml(playerName)} called it.`;
+  if (isCreator()) {
+    overlayResetBtn.classList.remove('hidden');
+  } else {
+    overlayResetBtn.classList.add('hidden');
+  }
   bingoOverlay.classList.remove('hidden');
   window.launchConfetti();
 }
 
-bingoOverlay.addEventListener('click', () => {
+bingoOverlay.addEventListener('click', (e) => {
+  if (e.target.closest('#overlay-reset-btn')) return;
   bingoOverlay.classList.add('hidden');
 });
 
+overlayResetBtn.addEventListener('click', async () => {
+  overlayResetBtn.disabled = true;
+  overlayResetBtn.textContent = 'Resetting...';
+
+  const res = await fetch('/api/reset-game', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ boardId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.error('Reset failed:', err.error);
+  } else {
+    myCard = null;
+    otherCards = {};
+    renderOwnCard();
+    renderOtherCards();
+    bingoOverlay.classList.add('hidden');
+    playSection.classList.add('hidden');
+    showSetupForEveryone();
+  }
+
+  overlayResetBtn.disabled = false;
+  overlayResetBtn.textContent = 'New Round';
+});
+
 // --- Share ---
+
+const shareCodeEl = document.getElementById('share-code');
+const shareCodeLabel = `Join Code: ${boardId}`;
+shareCodeEl.textContent = shareCodeLabel;
+
+shareCodeEl.addEventListener('click', () => {
+  navigator.clipboard.writeText(boardId).then(() => {
+    shareCodeEl.textContent = 'Code Copied!';
+    setTimeout(() => (shareCodeEl.textContent = shareCodeLabel), 1500);
+  });
+});
 
 shareBtn.addEventListener('click', () => {
   const url = window.location.href;
   navigator.clipboard.writeText(url).then(() => {
     shareBtn.textContent = 'Copied!';
-    setTimeout(() => (shareBtn.textContent = 'Copy Link'), 2000);
-  }).catch(() => {
-    // fallback: just select the URL bar
-  });
+    setTimeout(() => (shareBtn.textContent = 'Copy Link'), 1500);
+  }).catch(() => {});
 });
 
 // --- Utility ---
@@ -861,34 +919,13 @@ async function loadLeaderboard() {
     .select('player_id')
     .eq('board_id', boardId);
 
-  if (!events || events.length === 0) {
-    leaderboardSection.classList.add('hidden');
-    return;
+  winCounts = {};
+  if (events) {
+    events.forEach((e) => {
+      winCounts[e.player_id] = (winCounts[e.player_id] || 0) + 1;
+    });
   }
-
-  // Count wins per player
-  const counts = {};
-  events.forEach((e) => {
-    counts[e.player_id] = (counts[e.player_id] || 0) + 1;
-  });
-
-  // Sort by wins descending
-  const sorted = Object.entries(counts)
-    .map(([playerId, wins]) => ({ playerId, wins }))
-    .sort((a, b) => b.wins - a.wins);
-
-  leaderboardListEl.innerHTML = '';
-  sorted.forEach((entry) => {
-    const player = allPlayers.find((p) => p.id === entry.playerId);
-    const name = player ? escapeHtml(player.name) : 'Unknown';
-    const color = player ? player.color : '#999';
-    const el = document.createElement('div');
-    el.className = 'leaderboard-item';
-    el.innerHTML = `<span class="player-dot" style="background:${color}"></span> <span class="leaderboard-name">${name}</span> <span class="leaderboard-wins">${entry.wins}</span>`;
-    leaderboardListEl.appendChild(el);
-  });
-
-  leaderboardSection.classList.remove('hidden');
+  renderPlayerRoster();
 }
 
 // --- Reward ---

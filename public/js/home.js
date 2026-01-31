@@ -35,7 +35,6 @@ function updateUserUI(session, profile) {
     signInPrompt.classList.add('hidden');
   } else {
     userBar.classList.add('hidden');
-    signInPrompt.classList.remove('hidden');
   }
 }
 
@@ -354,50 +353,155 @@ function initFlipper(el, words) {
 // Landing page flipper
 initFlipper(document.getElementById('flipper'));
 
-// Create page flipper
-initFlipper(document.getElementById('create-flipper'), [
-  'redundant', 'mundane', 'annoying', 'repetitive',
-  'loathsome', 'predictable', 'exhausting', 'insufferable'
-]);
-
-// --- Example card auto-marking ---
+// --- Live Demo ---
+const demoSection = document.getElementById('demo-section');
 const demoGrid = document.getElementById('demo-grid');
-if (demoGrid) {
-  const demoCells = Array.from(demoGrid.querySelectorAll('.demo-cell:not(.demo-free)'));
-  const marked = new Set();
+const demoBingoFlash = document.getElementById('demo-bingo-flash');
+const demoSidebarLeft = document.getElementById('demo-sidebar-left');
+const demoSidebarRight = document.getElementById('demo-sidebar-right');
 
-  function autoMark() {
-    if (marked.size >= demoCells.length) {
-      // Reset all marks, start over
-      demoCells.forEach((c) => c.classList.remove('auto-mark'));
-      marked.clear();
-    }
+if (demoGrid && demoSection) {
+  const DEMO_PLAYERS = [
+    { name: 'You', color: '#FF6B35' },
+    { name: 'Sarah', color: '#ec4899' },
+    { name: 'Mike', color: '#3b82f6' },
+  ];
 
-    let idx;
-    do {
-      idx = Math.floor(Math.random() * demoCells.length);
-    } while (marked.has(idx));
+  const DEMO_QUOTES = [
+    'Back in my day...', 'It\'s the seed oils.', 'Must be nice.',
+    'Per my last email.', 'I\'m an empath.', 'Kids these days...',
+    'Do your own research.', 'Bless your heart.', 'I barely slept.',
+    'As a mother...', 'Have you tried yoga?', 'You look tired.',
+    'FREE',
+    'Nobody wants to work.', 'I\'m just being honest.',
+    'That\'s not a real job.', 'Mercury retrograde.', 'Both sides...',
+    'We\'re like family.', 'Circling back.', 'I\'m manifesting.',
+    'Sure, Jan.', 'It\'s organic.', 'Few understand.', 'Rest days? Weak.',
+  ];
 
-    marked.add(idx);
-    demoCells[idx].classList.add('auto-mark');
+  // Winning line: diagonal top-left to bottom-right (0, 6, 12, 18, 24)
+  const WINNING_LINE = [0, 6, 12, 18, 24];
+  const PRE_MARKS = [3, 7, 15, 21, 10];
+
+  // Random marks for mini cards
+  const SARAH_MARKS = [1, 4, 8, 12, 16, 20];
+  const MIKE_MARKS = [2, 5, 12, 14, 19, 23];
+
+  function buildDemoGrid() {
+    demoGrid.innerHTML = '';
+    DEMO_QUOTES.forEach((text, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'demo-cell-live' + (text === 'FREE' ? ' demo-free demo-marked' : '');
+      cell.innerHTML = `<span>${text}</span>`;
+      cell.dataset.index = i;
+      demoGrid.appendChild(cell);
+    });
   }
 
-  // Start after the section scrolls into view
+  function buildMiniCard(player, marks) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'demo-mini-card';
+
+    const grid = document.createElement('div');
+    grid.className = 'demo-mini-grid';
+    for (let i = 0; i < 25; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'demo-mini-cell';
+      cell.dataset.index = i;
+      if (i === 12) { // FREE
+        cell.classList.add('mini-marked');
+        cell.style.background = player.color;
+      }
+      grid.appendChild(cell);
+    }
+    const label = document.createElement('div');
+    label.className = 'demo-mini-label';
+    label.innerHTML = `<span class="demo-dot" style="background:${player.color}"></span>${player.name}`;
+    wrapper.appendChild(label);
+    wrapper.appendChild(grid);
+
+    return wrapper;
+  }
+
+  function markMiniCell(wrapper, index, color) {
+    const cell = wrapper.querySelector(`[data-index="${index}"]`);
+    if (cell) {
+      cell.classList.add('mini-marked');
+      cell.style.background = color;
+    }
+  }
+
+  function resetDemo() {
+    demoBingoFlash.classList.add('hidden');
+    demoSidebarLeft.innerHTML = '';
+    demoSidebarRight.innerHTML = '';
+    buildDemoGrid();
+  }
+
+  function runDemo() {
+    resetDemo();
+    const cells = Array.from(demoGrid.children);
+    let t = 0;
+
+    // Phase 1: Show mini cards
+    setTimeout(() => {
+      const sarahCard = buildMiniCard(DEMO_PLAYERS[1], SARAH_MARKS);
+      const mikeCard = buildMiniCard(DEMO_PLAYERS[2], MIKE_MARKS);
+      demoSidebarLeft.appendChild(sarahCard);
+      demoSidebarRight.appendChild(mikeCard);
+      requestAnimationFrame(() => {
+        sarahCard.classList.add('visible');
+        mikeCard.classList.add('visible');
+      });
+    }, t);
+    t += 800;
+
+    // Phase 2: Mark pre-marks on main + scatter marks on minis
+    PRE_MARKS.forEach((cellIdx, i) => {
+      setTimeout(() => {
+        cells[cellIdx].classList.add('demo-marked');
+        // Also mark a mini cell for other players
+        const minis = [demoSidebarLeft.querySelector('.demo-mini-card'), demoSidebarRight.querySelector('.demo-mini-card')];
+        if (i < SARAH_MARKS.length) markMiniCell(minis[0], SARAH_MARKS[i], DEMO_PLAYERS[1].color);
+        if (i < MIKE_MARKS.length) markMiniCell(minis[1], MIKE_MARKS[i], DEMO_PLAYERS[2].color);
+      }, t + i * 900);
+    });
+    t += PRE_MARKS.length * 900 + 600;
+
+    // Phase 3: Winning line
+    const winCells = WINNING_LINE.filter(i => i !== 12);
+    winCells.forEach((cellIdx, i) => {
+      setTimeout(() => {
+        cells[cellIdx].classList.add('demo-marked');
+      }, t + i * 1100);
+    });
+    t += winCells.length * 1100 + 400;
+
+    // Phase 4: Light up the line
+    setTimeout(() => {
+      WINNING_LINE.forEach(i => {
+        cells[i].classList.add('demo-winner');
+      });
+    }, t);
+    t += 600;
+
+    // Phase 5: Bingo flash
+    setTimeout(() => {
+      demoBingoFlash.classList.remove('hidden');
+    }, t);
+
+    // Phase 6: Loop
+    setTimeout(() => runDemo(), t + 4000);
+  }
+
   const demoObserver = new IntersectionObserver((entries) => {
     if (entries[0].isIntersecting) {
       demoObserver.disconnect();
-      // Mark a few cells with staggered timing
-      let delay = 800;
-      for (let i = 0; i < 5; i++) {
-        setTimeout(autoMark, delay);
-        delay += 1200;
-      }
-      // Then keep marking on an interval
-      setInterval(autoMark, 3000);
+      runDemo();
     }
-  }, { threshold: 0.3 });
+  }, { threshold: 0.2 });
 
-  demoObserver.observe(demoGrid);
+  demoObserver.observe(demoSection);
 }
 
 

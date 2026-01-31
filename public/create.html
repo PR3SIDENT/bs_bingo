@@ -46,31 +46,30 @@
 
         <!-- App Section: always visible -->
         <div id="app-section">
-          <p class="create-instructions">
-            Make a board to track the
-            <span class="flipper" id="create-flipper">
-              <span class="flipper-sizer" aria-hidden="true">loathsome</span>
-              <span class="flipper-text active">redundant</span>
-            </span>
-            shit someone says. We'll turn it into a bingo card for you and your friends.
-          </p>
+          <p class="create-instructions">Turn someone's greatest hits into a game.</p>
           <form id="create-form" class="create-form">
-            <input
-              type="text"
-              id="board-name"
-              placeholder="Who is this board about?"
-              maxlength="60"
-              autocomplete="off"
-              required
-              autofocus
-            >
-            <input
-              type="text"
-              id="creator-name"
-              placeholder="Your name"
-              maxlength="20"
-              autocomplete="off"
-            >
+            <div class="form-field">
+              <label for="board-name" class="form-label">Who always says the same stuff?</label>
+              <input
+                type="text"
+                id="board-name"
+                placeholder="e.g. Uncle Rick, My Boss, Dad"
+                maxlength="60"
+                autocomplete="off"
+                required
+                autofocus
+              >
+            </div>
+            <div class="form-field">
+              <label for="creator-name" class="form-label">What should we call you?</label>
+              <input
+                type="text"
+                id="creator-name"
+                placeholder="e.g. Cory"
+                maxlength="20"
+                autocomplete="off"
+              >
+            </div>
             <button type="submit" class="btn btn-primary">Let's Go</button>
           </form>
 
@@ -131,6 +130,10 @@
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <p class="site-footer-text">Bull$hit! Bingo &middot; Built by <a href="mailto:contact@n1bz.io" class="footer-link">PR3SIDENT</a></p>
+  </footer>
 
   <script type="module" src="/js/home.js"></script>
 </body>

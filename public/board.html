@@ -12,13 +12,20 @@
 <body>
 
   <header class="board-header">
-    <a href="/" class="back-link">&larr; Home</a>
-    <div id="game-timer" class="header-timer hidden">
-      <span class="timer-dot"></span>
-      <span id="timer-label" class="timer-label"></span>
-    </div>
-    <div class="header-spacer"></div>
-    <button id="share-btn" class="btn btn-small btn-secondary">Copy Link</button>
+    <a href="/" class="header-logo">
+      <span class="bingo-icon-logo bingo-icon-logo--xs" aria-hidden="true">
+        <span class="bil-cell"></span>
+        <span class="bil-cell bil-marked"></span>
+        <span class="bil-cell"></span>
+        <span class="bil-cell"></span>
+        <span class="bil-cell bil-marked"></span>
+        <span class="bil-cell"></span>
+        <span class="bil-cell bil-marked"></span>
+        <span class="bil-cell"></span>
+        <span class="bil-cell bil-marked"></span>
+      </span>
+      <span class="header-logo-text">Bull<span class="accent">$</span>hit<span class="accent">!</span> Bingo</span>
+    </a>
   </header>
 
   <main class="board-main" style="opacity:0; transform:translateY(8px)">
@@ -80,7 +87,7 @@
           <div id="topic-list" class="topic-list"></div>
 
           <div id="reward-row" class="reward-row hidden">
-            <input type="text" id="reward-input" class="reward-input" placeholder="Stakes? e.g. loser buys a marg" maxlength="100" autocomplete="off">
+            <input type="text" id="reward-input" class="reward-input" placeholder="Playing for: e.g. winner picks the restaurant" maxlength="100" autocomplete="off">
           </div>
 
           <div class="setup-actions">
@@ -92,16 +99,8 @@
       </div>
     </section>
 
-    <!-- Player Roster -->
-    <div id="player-roster" class="player-roster player-roster-card"></div>
-
     <!-- Play Mode -->
     <section id="play-section" class="play-section hidden">
-      <div class="play-controls">
-        <button id="back-setup-btn" class="btn btn-small btn-secondary hidden">&larr; Topics</button>
-        <button id="reset-game-btn" class="btn btn-small btn-reset hidden">Reset Game</button>
-      </div>
-
       <div id="reward-display" class="reward-display hidden"></div>
 
       <!-- Your card -->
@@ -113,12 +112,24 @@
       <!-- Other players' mini cards -->
       <div id="other-players" class="other-players-scroll"></div>
 
-      <!-- Leaderboard -->
-      <section id="leaderboard-section" class="leaderboard-card hidden">
-        <h2>Leaderboard</h2>
-        <div id="leaderboard-list" class="leaderboard-list"></div>
-      </section>
     </section>
+
+    <!-- Game Bar -->
+    <div class="game-bar">
+      <div class="game-bar-tools">
+        <div id="game-timer" class="game-bar-timer hidden">
+          <span class="timer-dot"></span>
+          <span id="timer-label" class="timer-label"></span>
+        </div>
+        <span class="share-code" id="share-code"></span>
+        <button id="share-btn" class="btn btn-small btn-primary share-btn">Copy Link</button>
+        <button id="reset-game-btn" class="btn btn-small btn-reset hidden">Reset</button>
+      </div>
+      <div class="game-bar-players">
+        <span class="roster-label">Players</span>
+        <div id="player-roster" class="player-roster"></div>
+      </div>
+    </div>
   </main>
 
   <!-- Bingo overlay -->
@@ -126,10 +137,16 @@
     <div class="bingo-overlay-content">
       <div class="bingo-text">BINGO!</div>
       <div class="bingo-winner" id="bingo-winner"></div>
+      <button id="overlay-reset-btn" class="btn btn-primary overlay-reset-btn hidden">New Round</button>
+      <p class="overlay-dismiss">tap anywhere to dismiss</p>
     </div>
   </div>
 
   <canvas id="confetti-canvas"></canvas>
+
+  <footer class="site-footer">
+    <p class="site-footer-text">Bull$hit! Bingo &middot; Built by <a href="mailto:contact@n1bz.io" class="footer-link">PR3SIDENT</a></p>
+  </footer>
 
   <script src="/js/confetti.js"></script>
   <script type="module" src="/js/board.js"></script>
