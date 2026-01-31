@@ -23,7 +23,6 @@
 
   <main class="board-main" style="opacity:0; transform:translateY(8px)">
     <h1 id="board-name" class="board-name-hero"></h1>
-    <div id="player-roster" class="player-roster"></div>
 
     <!-- Compact Join Bar -->
     <section id="join-section" class="join-bar hidden">
@@ -52,42 +51,49 @@
 
     <!-- Setup Mode -->
     <section id="setup-section" class="setup-card hidden">
-      <h2>What do they always do?</h2>
-      <p class="hint">Add their go-to moves. 8 topics = 3&times;3, 15 = 4&times;4, 24 = 5&times;5</p>
-
-      <form id="topic-form" class="topic-form">
-        <input
-          type="text"
-          id="topic-input"
-          placeholder="e.g. &quot;Brings up their golf handicap&quot;"
-          maxlength="80"
-          autocomplete="off"
-          required
-        >
-        <button type="submit" class="btn btn-primary">Add</button>
-      </form>
-
-      <div id="topic-list" class="topic-list"></div>
-
-      <!-- Inspiration Quotes -->
-      <div id="inspiration-container" class="inspiration-container">
-        <button type="button" id="inspiration-toggle" class="inspiration-toggle">Need ideas?</button>
-        <div id="inspiration-body" class="inspiration-body hidden">
+      <div class="setup-panels">
+        <!-- Left panel: Inspiration -->
+        <div class="setup-panel setup-panel--inspiration">
+          <h3 class="panel-heading">Need some ideas?</h3>
+          <p class="panel-hint">Here are some starters</p>
           <div id="inspiration-pills" class="inspiration-pills"></div>
           <div id="inspiration-chips" class="inspiration-chips"></div>
         </div>
-      </div>
 
-      <div id="reward-row" class="reward-row hidden">
-        <input type="text" id="reward-input" class="reward-input" placeholder="Stakes? e.g. loser buys a marg" maxlength="100" autocomplete="off">
-      </div>
+        <!-- Right panel: Your card -->
+        <div class="setup-panel setup-panel--topics">
+          <h3 class="panel-heading">Build your card</h3>
+          <p class="panel-hint">Options here will end up in your card.</p>
 
-      <div class="setup-actions">
-        <span id="topic-count" class="topic-count">0 topics</span>
-        <span id="waiting-host" class="waiting-host hidden">Waiting for host to start…</span>
-        <button id="play-btn" class="btn btn-primary btn-play" disabled>Start Game</button>
+          <form id="topic-form" class="topic-form">
+            <input
+              type="text"
+              id="topic-input"
+              placeholder="Add your own"
+              maxlength="80"
+              autocomplete="off"
+              required
+            >
+            <button type="submit" class="btn btn-primary">Add</button>
+          </form>
+
+          <div id="topic-list" class="topic-list"></div>
+
+          <div id="reward-row" class="reward-row hidden">
+            <input type="text" id="reward-input" class="reward-input" placeholder="Stakes? e.g. loser buys a marg" maxlength="100" autocomplete="off">
+          </div>
+
+          <div class="setup-actions">
+            <span id="topic-count" class="topic-count hidden"></span>
+            <span id="waiting-host" class="waiting-host hidden">Waiting for host to start…</span>
+            <button id="play-btn" class="btn btn-primary btn-play" disabled>Start Game</button>
+          </div>
+        </div>
       </div>
     </section>
+
+    <!-- Player Roster -->
+    <div id="player-roster" class="player-roster player-roster-card"></div>
 
     <!-- Play Mode -->
     <section id="play-section" class="play-section hidden">

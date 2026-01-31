@@ -61,8 +61,6 @@ let rewardSaveTimer = null;
 let activeInspirationCategory = null;
 
 // Inspiration DOM refs
-const inspirationToggle = document.getElementById('inspiration-toggle');
-const inspirationBody = document.getElementById('inspiration-body');
 const inspirationPills = document.getElementById('inspiration-pills');
 const inspirationChips = document.getElementById('inspiration-chips');
 
@@ -173,8 +171,12 @@ function isCreator() {
 
 function renderPlayerRoster() {
   playerRosterEl.innerHTML = '';
+  const label = document.createElement('span');
+  label.className = 'roster-label';
+  label.textContent = 'Players in your game';
+  playerRosterEl.appendChild(label);
   if (allPlayers.length === 0) {
-    playerRosterEl.innerHTML = '<span class="roster-empty">No players yet</span>';
+    playerRosterEl.innerHTML += '<span class="roster-empty">No players yet</span>';
     return;
   }
   allPlayers.forEach((player) => {
@@ -486,9 +488,7 @@ function renderTopicList() {
 
 function updateTopicCount() {
   const count = topics.length;
-  const playerCount = allPlayers.length;
-  const playerLabel = `${playerCount} player${playerCount !== 1 ? 's' : ''}`;
-  topicCountEl.textContent = `${playerLabel} · ${count} topic${count !== 1 ? 's' : ''}`;
+  topicCountEl.textContent = `${count} topic${count !== 1 ? 's' : ''}`;
 
   if (isCreator()) {
     playBtn.disabled = count < MIN_TOPICS;
@@ -541,7 +541,23 @@ topicListEl.addEventListener('click', async (e) => {
   if (!btn) return;
   const id = parseInt(btn.dataset.id);
 
-  await supabase.from('topics').delete().eq('id', id);
+  // Optimistic: remove immediately from UI
+  const removed = topics.find((t) => t.id === id);
+  topics = topics.filter((t) => t.id !== id);
+  renderTopicList();
+  updateTopicCount();
+  renderQuoteChips();
+
+  const { error } = await supabase.from('topics').delete().eq('id', id);
+  if (error) {
+    // Restore on failure
+    if (removed) {
+      topics.push(removed);
+      renderTopicList();
+      updateTopicCount();
+      renderQuoteChips();
+    }
+  }
 });
 
 // --- Play Mode ---
@@ -919,21 +935,9 @@ function initInspiration() {
   if (inspirationInitialized) return;
   inspirationInitialized = true;
 
-  inspirationToggle.addEventListener('click', () => {
-    const isOpen = !inspirationBody.classList.contains('hidden');
-    if (isOpen) {
-      inspirationBody.classList.add('hidden');
-      inspirationToggle.textContent = 'Need ideas?';
-    } else {
-      inspirationBody.classList.remove('hidden');
-      inspirationToggle.textContent = 'Hide ideas';
-      if (!activeInspirationCategory) {
-        activeInspirationCategory = INSPIRATION_CATEGORIES[0].name;
-      }
-      renderCategoryPills();
-      renderQuoteChips();
-    }
-  });
+  activeInspirationCategory = INSPIRATION_CATEGORIES[0].name;
+  renderCategoryPills();
+  renderQuoteChips();
 }
 
 function renderCategoryPills() {
@@ -967,7 +971,8 @@ function renderQuoteChips() {
     chip.className = 'inspiration-chip' + (isUsed ? ' inspiration-chip--used' : '');
     chip.textContent = quote;
     if (!isUsed) {
-      chip.addEventListener('click', () => addInspirationTopic(quote, chip));
+      chip._handler = () => addInspirationTopic(quote, chip);
+      chip.addEventListener('click', chip._handler);
     }
     inspirationChips.appendChild(chip);
   });
@@ -976,9 +981,13 @@ function renderQuoteChips() {
 async function addInspirationTopic(text, chipEl) {
   if (!myPlayer) return;
 
-  // Optimistic: mark chip as used
+  // Brief amber pulse animation before dimming
+  chipEl.classList.add('inspiration-chip--adding');
+  chipEl.removeEventListener('click', chipEl._handler);
+
+  await new Promise((r) => setTimeout(r, 300));
+  chipEl.classList.remove('inspiration-chip--adding');
   chipEl.classList.add('inspiration-chip--used');
-  chipEl.replaceWith(chipEl.cloneNode(true)); // Remove listener
 
   // Optimistic: add topic immediately
   const tempId = `temp-${Date.now()}`;
