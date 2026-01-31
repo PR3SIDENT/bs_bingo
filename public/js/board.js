@@ -57,10 +57,20 @@ let boardReward = null;
 let rewardSaveTimer = null;
 let activeInspirationCategory = null;
 let winCounts = {};
+let topicIdsAtGameStart = new Set();
 
 // Inspiration DOM refs
 const inspirationPills = document.getElementById('inspiration-pills');
 const inspirationChips = document.getElementById('inspiration-chips');
+
+// Next Round DOM refs
+const nextRoundSection = document.getElementById('next-round-section');
+const nextRoundToggle = document.getElementById('next-round-toggle');
+const nextRoundBadge = document.getElementById('next-round-badge');
+const nextRoundBody = document.getElementById('next-round-body');
+const nextRoundForm = document.getElementById('next-round-form');
+const nextRoundInput = document.getElementById('next-round-input');
+const nextRoundList = document.getElementById('next-round-list');
 
 // Debounce for card invalidation (trigger fires per-row)
 let invalidateTimer = null;
@@ -199,6 +209,7 @@ function showSetupForEveryone() {
     playBtn.classList.add('hidden');
     waitingHostEl.classList.remove('hidden');
   }
+  renderTopicList();
   updateTopicCount();
   initInspiration();
 }
@@ -300,6 +311,7 @@ function subscribeRealtime() {
         updateTopicCount();
         renderQuoteChips();
       }
+      if (isInPlayMode()) renderNextRoundList();
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'topics', filter: `board_id=eq.${boardId}` }, (payload) => {
       const id = payload.old.id;
@@ -307,6 +319,7 @@ function subscribeRealtime() {
       renderTopicList();
       updateTopicCount();
       renderQuoteChips();
+      if (isInPlayMode()) renderNextRoundList();
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `board_id=eq.${boardId}` }, (payload) => {
       const player = payload.new;
@@ -353,6 +366,7 @@ function subscribeRealtime() {
       invalidateTimer = setTimeout(() => {
         myCard = null;
         otherCards = {};
+        topicIdsAtGameStart = new Set();
         renderOwnCard();
         renderOtherCards();
         bingoOverlay.classList.add('hidden');
@@ -578,8 +592,12 @@ async function enterPlayMode() {
   bingoOverlay.classList.add('hidden');
   renderOwnCard();
 
+  // Snapshot current topic IDs so we can distinguish next-round additions
+  topicIdsAtGameStart = new Set(topics.map((t) => t.id));
+
   setupSection.classList.add('hidden');
   playSection.classList.remove('hidden');
+  renderNextRoundList();
 
   // Show host-only controls
   if (isCreator()) {
@@ -635,6 +653,7 @@ resetGameBtn.addEventListener('click', async () => {
     // Clear local state immediately (don't rely on realtime DELETE filter)
     myCard = null;
     otherCards = {};
+    topicIdsAtGameStart = new Set();
     renderOwnCard();
     renderOtherCards();
     bingoOverlay.classList.add('hidden');
@@ -760,8 +779,13 @@ async function tryLoadMyCard() {
   };
 
   renderOwnCard();
+
+  // Snapshot current topic IDs so we can distinguish next-round additions
+  topicIdsAtGameStart = new Set(topics.map((t) => t.id));
+
   setupSection.classList.add('hidden');
   playSection.classList.remove('hidden');
+  renderNextRoundList();
 
   if (isCreator()) {
     resetGameBtn.classList.remove('hidden');
@@ -871,6 +895,7 @@ overlayResetBtn.addEventListener('click', async () => {
   } else {
     myCard = null;
     otherCards = {};
+    topicIdsAtGameStart = new Set();
     renderOwnCard();
     renderOtherCards();
     bingoOverlay.classList.add('hidden');
@@ -1049,6 +1074,90 @@ async function addInspirationTopic(text, chipEl) {
     if (t) t.id = data.id;
   }
 }
+
+// --- Next Round Topics ---
+
+function isInPlayMode() {
+  return !playSection.classList.contains('hidden');
+}
+
+function renderNextRoundList() {
+  const nextTopics = topics.filter((t) => !topicIdsAtGameStart.has(t.id));
+  const count = nextTopics.length;
+
+  // Update badge
+  if (count > 0) {
+    nextRoundBadge.textContent = count;
+    nextRoundBadge.classList.remove('hidden');
+  } else {
+    nextRoundBadge.classList.add('hidden');
+  }
+
+  // Render list
+  nextRoundList.innerHTML = '';
+  nextTopics.forEach((topic) => {
+    const canRemove = isCreator() || (session && topic.created_by === session.user.id);
+    const el = document.createElement('div');
+    el.className = 'topic-item';
+    el.innerHTML = `
+      <span class="topic-text">${escapeHtml(topic.text)}</span>
+      ${canRemove ? `<button class="topic-remove" data-id="${topic.id}" title="Remove">&times;</button>` : ''}
+    `;
+    nextRoundList.appendChild(el);
+  });
+  nextRoundList.scrollTop = nextRoundList.scrollHeight;
+}
+
+nextRoundToggle.addEventListener('click', () => {
+  nextRoundBody.classList.toggle('hidden');
+});
+
+nextRoundForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = nextRoundInput.value.trim();
+  if (!text) return;
+
+  nextRoundInput.value = '';
+
+  // Optimistic: show topic immediately with a temp id
+  const tempId = `temp-${Date.now()}`;
+  topics.push({ id: tempId, text, created_by: session.user.id });
+  renderNextRoundList();
+
+  const { data, error } = await supabase
+    .from('topics')
+    .insert({ board_id: boardId, text, created_by: session.user.id })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Failed to add topic:', error.message);
+    topics = topics.filter((t) => t.id !== tempId);
+    renderNextRoundList();
+  } else {
+    const t = topics.find((t) => t.id === tempId);
+    if (t) t.id = data.id;
+  }
+  nextRoundInput.focus();
+});
+
+nextRoundList.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.topic-remove');
+  if (!btn) return;
+  const id = parseInt(btn.dataset.id);
+
+  const removed = topics.find((t) => t.id === id);
+  topics = topics.filter((t) => t.id !== id);
+  renderNextRoundList();
+
+  const { error } = await supabase.from('topics').delete().eq('id', id);
+  if (error) {
+    if (removed) {
+      topics.push(removed);
+      renderNextRoundList();
+    }
+  }
+});
 
 // --- Go ---
 init();

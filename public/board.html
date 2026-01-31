@@ -36,7 +36,10 @@
         <span class="bil-cell"></span>
         <span class="bil-cell bil-marked"></span>
       </span>
-      <span class="header-logo-text">Bull<span class="accent">$</span>hit<span class="accent">!</span> Bingo</span>
+      <span class="header-logo-text">
+        <span class="header-logo-top">Bull<span class="accent">$</span>hit<span class="accent">!</span></span>
+        <span class="header-logo-bottom">Bingo</span>
+      </span>
     </a>
   </header>
 
@@ -123,6 +126,28 @@
 
       <!-- Other players' mini cards -->
       <div id="other-players" class="other-players-scroll"></div>
+
+      <!-- Next Round Topics (collapsible, visible during play) -->
+      <div id="next-round-section" class="next-round-section">
+        <button type="button" id="next-round-toggle" class="next-round-toggle">
+          Next Round Topics
+          <span id="next-round-badge" class="next-round-badge hidden">0</span>
+        </button>
+        <div id="next-round-body" class="next-round-body">
+          <form id="next-round-form" class="topic-form">
+            <input
+              type="text"
+              id="next-round-input"
+              placeholder="Add a topic for next round"
+              maxlength="80"
+              autocomplete="off"
+              required
+            >
+            <button type="submit" class="btn btn-primary">Add</button>
+          </form>
+          <div id="next-round-list" class="next-round-list"></div>
+        </div>
+      </div>
 
     </section>
 
