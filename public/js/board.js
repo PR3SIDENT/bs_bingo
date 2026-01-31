@@ -27,7 +27,6 @@ const topicListEl = document.getElementById('topic-list');
 const topicCountEl = document.getElementById('topic-count');
 const playBtn = document.getElementById('play-btn');
 const backSetupBtn = document.getElementById('back-setup-btn');
-const reshuffleBtn = document.getElementById('reshuffle-btn');
 const resetGameBtn = document.getElementById('reset-game-btn');
 const bingoGrid = document.getElementById('bingo-grid');
 const bingoOverlay = document.getElementById('bingo-overlay');
@@ -531,7 +530,6 @@ function enterSetupMode() {
 
 playBtn.addEventListener('click', enterPlayMode);
 backSetupBtn.addEventListener('click', enterSetupMode);
-reshuffleBtn.addEventListener('click', enterPlayMode);
 
 resetGameBtn.addEventListener('click', async () => {
   if (!isCreator()) return;
@@ -845,7 +843,7 @@ async function saveReward() {
 
 function updateRewardDisplay() {
   if (boardReward) {
-    rewardDisplay.textContent = boardReward;
+    rewardDisplay.innerHTML = `<span style="opacity:0.6">Stakes:</span> ${escapeHtml(boardReward)}`;
     rewardDisplay.classList.remove('hidden');
   } else {
     rewardDisplay.classList.add('hidden');
