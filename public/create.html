@@ -72,16 +72,6 @@
                 autofocus
               >
             </div>
-            <div class="form-field">
-              <label for="creator-name" class="form-label">What should we call you?</label>
-              <input
-                type="text"
-                id="creator-name"
-                placeholder="e.g. Cory"
-                maxlength="20"
-                autocomplete="off"
-              >
-            </div>
             <button type="submit" class="btn btn-primary">Let's Go</button>
           </form>
 
@@ -101,17 +91,16 @@
 
         <!-- Optional sign-in link for anonymous users -->
         <div id="sign-in-prompt" class="sign-in-prompt hidden">
-          <button id="show-sign-in-btn" class="btn btn-secondary">Sign in to save your boards &amp; history</button>
+          <button id="show-sign-in-btn" class="btn btn-secondary btn-small">Sign in to save your boards</button>
         </div>
 
         <!-- Auth Modal -->
         <div id="auth-modal" class="modal-backdrop hidden">
           <div class="modal-card">
             <h2>Sign In</h2>
-            <p class="hint">Optional — link your account to save boards across devices.</p>
+            <p class="hint">We'll email you a one-click login link. No password needed.</p>
 
             <div class="auth-modal-body">
-              <p class="hint" style="margin-bottom:var(--space-3)">We'll email you a one-click login link. No password needed.</p>
               <form id="magic-form" class="magic-form">
                 <input
                   type="email"
@@ -126,6 +115,26 @@
 
               <button id="close-auth-modal" class="btn btn-small btn-secondary" style="margin-top:1rem;">Cancel</button>
             </div>
+          </div>
+        </div>
+
+        <!-- Profile Setup Modal (first-time sign-in) -->
+        <div id="setup-modal" class="modal-backdrop hidden">
+          <div class="modal-card">
+            <h2>Welcome!</h2>
+            <p class="hint">What should people call you?</p>
+            <form id="setup-form" class="setup-form">
+              <input
+                type="text"
+                id="setup-name"
+                placeholder="Your name"
+                maxlength="30"
+                autocomplete="name"
+                required
+                autofocus
+              >
+              <button type="submit" class="btn btn-primary">Let's Play</button>
+            </form>
           </div>
         </div>
       </div>

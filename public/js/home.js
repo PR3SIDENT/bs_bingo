@@ -14,7 +14,9 @@ const userNameInput = document.getElementById('user-name-input');
 const signOutBtn = document.getElementById('sign-out-btn');
 const createForm = document.getElementById('create-form');
 const joinForm = document.getElementById('join-form');
-const creatorNameInput = document.getElementById('creator-name');
+const setupModal = document.getElementById('setup-modal');
+const setupForm = document.getElementById('setup-form');
+const setupNameInput = document.getElementById('setup-name');
 
 // Landing page (index.html) has no forms — only /create does
 const hasAppForms = !!createForm;
@@ -25,14 +27,30 @@ function isAnonymous(session) {
   return session?.user?.is_anonymous === true;
 }
 
+function needsProfileSetup(session, profile) {
+  if (!session || isAnonymous(session)) return false;
+  if (!profile?.display_name) return true;
+  const emailPrefix = session.user.email?.split('@')[0];
+  return profile.display_name === emailPrefix;
+}
+
 function updateUserUI(session, profile) {
   if (!hasAppForms) return;
-  if (session && !isAnonymous(session)) {
-    const displayName = profile?.display_name || session.user.email || 'Player';
+  if (session && !isAnonymous(session) && !needsProfileSetup(session, profile)) {
+    // Signed in with profile set up
+    const displayName = profile?.display_name || 'Player';
     userNameEl.textContent = displayName;
     userBar.classList.remove('hidden');
     signInPrompt.classList.add('hidden');
+  } else if (session && !isAnonymous(session) && needsProfileSetup(session, profile)) {
+    // Signed in but needs profile setup
+    userBar.classList.add('hidden');
+    signInPrompt.classList.add('hidden');
+    authModal.classList.add('hidden');
+    setupModal.classList.remove('hidden');
+    setupNameInput.focus();
   } else {
+    // Anonymous / not signed in
     userBar.classList.add('hidden');
     if (signInPrompt) signInPrompt.classList.remove('hidden');
   }
@@ -42,24 +60,20 @@ function updateUserUI(session, profile) {
 onAuthStateChange(async (session) => {
   if (session && !isAnonymous(session)) {
     const profile = await getProfile(session.user.id);
+    currentProfile = profile;
     updateUserUI(session, profile);
-    authModal.classList.add('hidden');
   } else {
     updateUserUI(session, null);
   }
 });
 
-// Initial load: ensure session (anonymous if needed), show app immediately
+// Initial load: ensure session (anonymous if needed)
 (async () => {
   const session = await ensureSession();
   if (session && !isAnonymous(session)) {
     const profile = await getProfile(session.user.id);
     currentProfile = profile;
     updateUserUI(session, profile);
-    // Hide creator name input if user already has a display name
-    if (creatorNameInput && profile?.display_name) {
-      creatorNameInput.classList.add('hidden');
-    }
   } else {
     updateUserUI(session, null);
   }
@@ -103,6 +117,36 @@ if (hasAppForms) {
     btn.textContent = 'Send Magic Link';
   });
 
+  // Profile setup form
+  setupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = setupNameInput.value.trim();
+    if (!name) return;
+
+    const btn = setupForm.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const session = await getSession();
+    if (!session) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ display_name: name })
+      .eq('id', session.user.id);
+
+    if (error) {
+      console.error('Failed to save profile:', error.message);
+      btn.disabled = false;
+      btn.textContent = "Let's Play";
+      return;
+    }
+
+    currentProfile = { ...currentProfile, display_name: name };
+    setupModal.classList.add('hidden');
+    updateUserUI(session, currentProfile);
+  });
+
   // Sign out
   signOutBtn.addEventListener('click', () => signOut());
 
@@ -135,6 +179,7 @@ if (hasAppForms) {
       return;
     }
     userNameEl.textContent = newName;
+    currentProfile = { ...currentProfile, display_name: newName };
   }
 
   userNameInput.addEventListener('blur', saveName);
@@ -161,8 +206,7 @@ if (hasAppForms) {
     }
 
     // Store pending name for auto-join on board page
-    const creatorName = creatorNameInput ? creatorNameInput.value.trim() : '';
-    const pendingName = creatorName || currentProfile?.display_name || '';
+    const pendingName = currentProfile?.display_name || '';
     if (pendingName) {
       try { localStorage.setItem('pending_name', pendingName); } catch {}
     }
@@ -182,8 +226,6 @@ if (hasAppForms) {
       btn.textContent = "Let's Go";
       return;
     }
-
-    console.log('Board created:', data);
 
     // Smooth fade-out before navigating
     const main = document.querySelector('.home');

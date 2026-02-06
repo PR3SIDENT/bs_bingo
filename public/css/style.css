@@ -1965,7 +1965,8 @@ input[type="email"]:focus {
 
 /* === Auth / Login === */
 
-.magic-form {
+.magic-form,
+.setup-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
