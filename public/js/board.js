@@ -1,6 +1,5 @@
 import { supabase } from './supabase-client.js';
 import { getSession, getProfile, ensureSession, signOut } from './auth.js';
-import { INSPIRATION_CATEGORIES } from './inspiration-data.js';
 
 const boardId = window.location.pathname.replace(/^\//, '');
 
@@ -95,10 +94,15 @@ async function init() {
     return;
   }
 
-  // Hide sign-in link if already signed in
+  // Show user name or sign-in link in header
   const headerSignIn = document.getElementById('header-sign-in');
   if (headerSignIn && !session.user.is_anonymous) {
-    headerSignIn.style.display = 'none';
+    const profile = await getProfile(session.user.id);
+    if (profile?.display_name) {
+      headerSignIn.textContent = profile.display_name;
+      headerSignIn.href = '/create';
+      headerSignIn.title = 'Your boards';
+    }
   }
 
   // Load board
@@ -231,7 +235,6 @@ function showSetupForEveryone() {
   }
   renderTopicList();
   updateTopicCount();
-  populateSetupQuotes();
   loadIdeaBank();
 }
 
@@ -1046,33 +1049,6 @@ function updateRewardDisplay() {
   }
 }
 
-// --- Floating Inspiration Quotes ---
-
-let setupQuotesPopulated = false;
-
-function populateSetupQuotes() {
-  if (setupQuotesPopulated) return;
-  setupQuotesPopulated = true;
-
-  const container = document.getElementById('setup-quotes');
-  if (!container) return;
-
-  // Gather all quotes from all categories and shuffle
-  const allQuotes = INSPIRATION_CATEGORIES.flatMap((c) => c.quotes);
-  const shuffled = allQuotes.sort(() => Math.random() - 0.5).slice(0, 30);
-
-  shuffled.forEach((text, i) => {
-    const el = document.createElement('span');
-    const isAmber = i % 4 === 0;
-    el.className = 'fq' + (isAmber ? ' fq--amber' : '');
-    el.textContent = text;
-    el.style.setProperty('--fq-d', (i * 0.06) + 's');
-    const driftDuration = 8 + (i % 5) * 2;
-    const driftDelay = (i * 0.06) + 0.5;
-    el.style.setProperty('--fq-drift-d', driftDelay + 's');
-    container.appendChild(el);
-  });
-}
 
 // --- Idea Bank ---
 

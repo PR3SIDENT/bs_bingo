@@ -1409,37 +1409,6 @@ input[type="email"]:focus {
   padding: var(--space-5);
 }
 
-/* Subtle floating inspiration quotes behind setup card */
-.setup-floating-quotes {
-  position: absolute;
-  inset: -60px -120px;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: center;
-  justify-content: center;
-  gap: 10px 8px;
-  padding: 2rem;
-  transform: rotate(-3deg) scale(1.1);
-  mask-image: radial-gradient(ellipse 55% 50% at 50% 50%, transparent 25%, black 70%);
-  -webkit-mask-image: radial-gradient(ellipse 55% 50% at 50% 50%, transparent 25%, black 70%);
-}
-
-.setup-floating-quotes .fq {
-  background: rgba(92, 61, 46, 0.3);
-  color: rgba(255, 248, 231, 0.25);
-  border-color: rgba(212, 165, 116, 0.06);
-  font-size: 0.75rem;
-  padding: 0.3rem 0.7rem;
-}
-
-.setup-floating-quotes .fq--amber {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.1);
-  color: rgba(252, 211, 77, 0.3);
-}
 
 .panel-heading {
   font-family: var(--font-display);
