@@ -74,6 +74,7 @@
 
     <!-- Setup Mode -->
     <section id="setup-section" class="setup-card hidden">
+      <div id="setup-quotes" class="setup-floating-quotes"></div>
       <div class="setup-content">
         <h3 class="panel-heading">Build your card</h3>
         <p class="panel-hint">Type your own or grab ideas below</p>
@@ -92,18 +93,7 @@
 
         <div id="topic-list" class="topic-list"></div>
 
-        <button type="button" class="widget-toggle" id="examples-toggle">
-          Example ideas
-          <span class="widget-arrow">&#9662;</span>
-        </button>
-        <div class="widget-body" id="examples-body">
-          <div class="widget-inner">
-            <div id="inspiration-pills" class="inspiration-pills"></div>
-            <div id="inspiration-chips" class="inspiration-chips"></div>
-          </div>
-        </div>
-
-        <button type="button" class="widget-toggle" id="past-toggle">
+        <button type="button" class="widget-toggle hidden" id="past-toggle">
           My past ideas
           <span class="widget-badge hidden" id="past-badge">0</span>
           <span class="widget-arrow">&#9662;</span>

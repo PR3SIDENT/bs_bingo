@@ -56,30 +56,19 @@ let boardCreatorId = null;
 let boardStatus = null;
 let boardReward = null;
 let rewardSaveTimer = null;
-let activeInspirationCategory = null;
 let winCounts = {};
 let topicIdsAtGameStart = new Set();
 let ideaBankTopics = [];
-
-// Inspiration DOM refs
-const inspirationPills = document.getElementById('inspiration-pills');
-const inspirationChips = document.getElementById('inspiration-chips');
 
 // Idea Bank DOM refs
 const ideaBankChipsEl = document.getElementById('idea-bank-chips');
 
 // Widget toggle refs
-const examplesToggle = document.getElementById('examples-toggle');
-const examplesBody = document.getElementById('examples-body');
 const pastToggle = document.getElementById('past-toggle');
 const pastBody = document.getElementById('past-body');
 const pastBadge = document.getElementById('past-badge');
 
 // Widget toggles
-examplesToggle?.addEventListener('click', function() {
-  this.classList.toggle('open');
-  examplesBody.classList.toggle('open');
-});
 pastToggle?.addEventListener('click', function() {
   this.classList.toggle('open');
   pastBody.classList.toggle('open');
@@ -242,7 +231,7 @@ function showSetupForEveryone() {
   }
   renderTopicList();
   updateTopicCount();
-  initInspiration();
+  populateSetupQuotes();
   loadIdeaBank();
 }
 
@@ -254,7 +243,7 @@ function showJoinWithSetup() {
     playBtn.classList.remove('hidden');
     waitingHostEl.classList.add('hidden');
     updateTopicCount();
-    initInspiration();
+    populateSetupQuotes();
     loadIdeaBank();
   }
   // Non-creators just see the join bar until they join
@@ -342,7 +331,7 @@ function subscribeRealtime() {
         topics.push(topic);
         renderTopicList();
         updateTopicCount();
-        renderQuoteChips();
+
         renderIdeaBank();
       }
       if (isInPlayMode()) renderNextRoundList();
@@ -352,7 +341,6 @@ function subscribeRealtime() {
       topics = topics.filter((t) => t.id !== id);
       renderTopicList();
       updateTopicCount();
-      renderQuoteChips();
       renderIdeaBank();
       if (isInPlayMode()) renderNextRoundList();
     })
@@ -598,7 +586,6 @@ topicListEl.addEventListener('click', async (e) => {
   topics = topics.filter((t) => t.id !== id);
   renderTopicList();
   updateTopicCount();
-  renderQuoteChips();
   renderIdeaBank();
 
   const { error } = await supabase.from('topics').delete().eq('id', id);
@@ -608,7 +595,6 @@ topicListEl.addEventListener('click', async (e) => {
       topics.push(removed);
       renderTopicList();
       updateTopicCount();
-      renderQuoteChips();
       renderIdeaBank();
     }
   }
@@ -1060,90 +1046,32 @@ function updateRewardDisplay() {
   }
 }
 
-// --- Inspiration ---
+// --- Floating Inspiration Quotes ---
 
-let inspirationInitialized = false;
+let setupQuotesPopulated = false;
 
-function initInspiration() {
-  if (inspirationInitialized) return;
-  inspirationInitialized = true;
+function populateSetupQuotes() {
+  if (setupQuotesPopulated) return;
+  setupQuotesPopulated = true;
 
-  activeInspirationCategory = INSPIRATION_CATEGORIES[0].name;
-  renderCategoryPills();
-  renderQuoteChips();
-}
+  const container = document.getElementById('setup-quotes');
+  if (!container) return;
 
-function renderCategoryPills() {
-  inspirationPills.innerHTML = '';
-  INSPIRATION_CATEGORIES.forEach((cat) => {
-    const pill = document.createElement('button');
-    pill.type = 'button';
-    pill.className = 'inspiration-pill' + (cat.name === activeInspirationCategory ? ' inspiration-pill--active' : '');
-    pill.textContent = cat.name;
-    pill.addEventListener('click', () => {
-      activeInspirationCategory = cat.name;
-      renderCategoryPills();
-      renderQuoteChips();
-    });
-    inspirationPills.appendChild(pill);
+  // Gather all quotes from all categories and shuffle
+  const allQuotes = INSPIRATION_CATEGORIES.flatMap((c) => c.quotes);
+  const shuffled = allQuotes.sort(() => Math.random() - 0.5).slice(0, 30);
+
+  shuffled.forEach((text, i) => {
+    const el = document.createElement('span');
+    const isAmber = i % 4 === 0;
+    el.className = 'fq' + (isAmber ? ' fq--amber' : '');
+    el.textContent = text;
+    el.style.setProperty('--fq-d', (i * 0.06) + 's');
+    const driftDuration = 8 + (i % 5) * 2;
+    const driftDelay = (i * 0.06) + 0.5;
+    el.style.setProperty('--fq-drift-d', driftDelay + 's');
+    container.appendChild(el);
   });
-}
-
-function renderQuoteChips() {
-  if (!activeInspirationCategory) return;
-  const cat = INSPIRATION_CATEGORIES.find((c) => c.name === activeInspirationCategory);
-  if (!cat) return;
-
-  const existingTexts = new Set(topics.map((t) => t.text.toLowerCase()));
-  inspirationChips.innerHTML = '';
-
-  cat.quotes.forEach((quote) => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    const isUsed = existingTexts.has(quote.toLowerCase());
-    chip.className = 'inspiration-chip' + (isUsed ? ' inspiration-chip--used' : '');
-    chip.textContent = quote;
-    if (!isUsed) {
-      chip._handler = () => addInspirationTopic(quote, chip);
-      chip.addEventListener('click', chip._handler);
-    }
-    inspirationChips.appendChild(chip);
-  });
-}
-
-async function addInspirationTopic(text, chipEl) {
-  if (!myPlayer) return;
-
-  // Brief amber pulse animation before dimming
-  chipEl.classList.add('inspiration-chip--adding');
-  chipEl.removeEventListener('click', chipEl._handler);
-
-  await new Promise((r) => setTimeout(r, 300));
-  chipEl.classList.remove('inspiration-chip--adding');
-  chipEl.classList.add('inspiration-chip--used');
-
-  // Optimistic: add topic immediately
-  const tempId = `temp-${Date.now()}`;
-  topics.push({ id: tempId, text, created_by: session.user.id });
-  renderTopicList();
-  updateTopicCount();
-
-  const { data, error } = await supabase
-    .from('topics')
-    .insert({ board_id: boardId, text, created_by: session.user.id })
-    .select('id')
-    .single();
-
-  if (error) {
-    console.error('Failed to add inspiration topic:', error.message);
-    topics = topics.filter((t) => t.id !== tempId);
-    renderTopicList();
-    updateTopicCount();
-    renderQuoteChips();
-  } else {
-    const t = topics.find((t) => t.id === tempId);
-    if (t) t.id = data.id;
-  }
 }
 
 // --- Idea Bank ---
@@ -1259,7 +1187,6 @@ async function addIdeaBankTopic(text, chipEl) {
   topics.push({ id: tempId, text, created_by: session.user.id });
   renderTopicList();
   updateTopicCount();
-  renderQuoteChips();
 
   const { data, error } = await supabase
     .from('topics')
@@ -1272,7 +1199,6 @@ async function addIdeaBankTopic(text, chipEl) {
     topics = topics.filter((t) => t.id !== tempId);
     renderTopicList();
     updateTopicCount();
-    renderQuoteChips();
     renderIdeaBank();
   } else {
     const t = topics.find((t) => t.id === tempId);
