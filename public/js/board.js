@@ -66,8 +66,24 @@ const inspirationPills = document.getElementById('inspiration-pills');
 const inspirationChips = document.getElementById('inspiration-chips');
 
 // Idea Bank DOM refs
-const ideaBankEl = document.getElementById('idea-bank');
 const ideaBankChipsEl = document.getElementById('idea-bank-chips');
+
+// Widget toggle refs
+const examplesToggle = document.getElementById('examples-toggle');
+const examplesBody = document.getElementById('examples-body');
+const pastToggle = document.getElementById('past-toggle');
+const pastBody = document.getElementById('past-body');
+const pastBadge = document.getElementById('past-badge');
+
+// Widget toggles
+examplesToggle?.addEventListener('click', function() {
+  this.classList.toggle('open');
+  examplesBody.classList.toggle('open');
+});
+pastToggle?.addEventListener('click', function() {
+  this.classList.toggle('open');
+  pastBody.classList.toggle('open');
+});
 
 // Next Round DOM refs
 const nextRoundSection = document.getElementById('next-round-section');
@@ -88,6 +104,12 @@ async function init() {
   if (!session) {
     document.body.innerHTML = '<div class="glass-card" style="margin:4rem auto;max-width:400px;padding:2rem;text-align:center"><h2>Unable to start session</h2><p style="margin-top:0.5rem;color:var(--text-dim)">Please try refreshing the page.</p><a href="/" class="btn btn-primary" style="margin-top:1rem;display:inline-block">Go Home</a></div>';
     return;
+  }
+
+  // Hide sign-in link if already signed in
+  const headerSignIn = document.getElementById('header-sign-in');
+  if (headerSignIn && !session.user.is_anonymous) {
+    headerSignIn.style.display = 'none';
   }
 
   // Load board
@@ -1153,11 +1175,24 @@ async function loadIdeaBank() {
 
 function renderIdeaBank() {
   if (ideaBankTopics.length === 0) {
-    ideaBankEl.classList.add('hidden');
+    if (pastToggle) pastToggle.classList.add('hidden');
     return;
   }
 
-  ideaBankEl.classList.remove('hidden');
+  if (pastToggle) pastToggle.classList.remove('hidden');
+
+  // Update badge count
+  const existingTextsForBadge = new Set(topics.map((t) => t.text.toLowerCase()));
+  const availableCount = ideaBankTopics.filter((t) => !existingTextsForBadge.has(t.toLowerCase())).length;
+  if (pastBadge) {
+    pastBadge.textContent = availableCount;
+    if (availableCount > 0) {
+      pastBadge.classList.remove('hidden');
+    } else {
+      pastBadge.classList.add('hidden');
+    }
+  }
+
   ideaBankChipsEl.innerHTML = '';
 
   const existingTexts = new Set(topics.map((t) => t.text.toLowerCase()));

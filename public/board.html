@@ -41,6 +41,7 @@
         <span class="header-logo-bottom">Bingo</span>
       </span>
     </a>
+    <a href="/create" class="header-signin" id="header-sign-in">Sign In</a>
   </header>
 
   <main class="board-main" style="opacity:0; transform:translateY(8px)">
@@ -73,47 +74,54 @@
 
     <!-- Setup Mode -->
     <section id="setup-section" class="setup-card hidden">
-      <div class="setup-panels">
-        <!-- Left panel: Inspiration -->
-        <div class="setup-panel setup-panel--inspiration">
-          <h3 class="panel-heading">Need some ideas?</h3>
-          <p class="panel-hint">Here are some starters</p>
-          <div id="inspiration-pills" class="inspiration-pills"></div>
-          <div id="inspiration-chips" class="inspiration-chips"></div>
-          <div id="idea-bank" class="idea-bank hidden">
-            <h4 class="panel-subheading">Your past ideas</h4>
+      <div class="setup-content">
+        <h3 class="panel-heading">Build your card</h3>
+        <p class="panel-hint">Type your own or grab ideas below</p>
+
+        <form id="topic-form" class="topic-form">
+          <input
+            type="text"
+            id="topic-input"
+            placeholder="Add your own"
+            maxlength="80"
+            autocomplete="off"
+            required
+          >
+          <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+
+        <div id="topic-list" class="topic-list"></div>
+
+        <button type="button" class="widget-toggle" id="examples-toggle">
+          Example ideas
+          <span class="widget-arrow">&#9662;</span>
+        </button>
+        <div class="widget-body" id="examples-body">
+          <div class="widget-inner">
+            <div id="inspiration-pills" class="inspiration-pills"></div>
+            <div id="inspiration-chips" class="inspiration-chips"></div>
+          </div>
+        </div>
+
+        <button type="button" class="widget-toggle" id="past-toggle">
+          My past ideas
+          <span class="widget-badge hidden" id="past-badge">0</span>
+          <span class="widget-arrow">&#9662;</span>
+        </button>
+        <div class="widget-body" id="past-body">
+          <div class="widget-inner">
             <div id="idea-bank-chips" class="inspiration-chips"></div>
           </div>
         </div>
 
-        <!-- Right panel: Your card -->
-        <div class="setup-panel setup-panel--topics">
-          <h3 class="panel-heading">Build your card</h3>
-          <p class="panel-hint">Options here will end up in your card.</p>
+        <div id="reward-row" class="reward-row hidden">
+          <input type="text" id="reward-input" class="reward-input" placeholder="Playing for: e.g. winner picks the restaurant" maxlength="100" autocomplete="off">
+        </div>
 
-          <form id="topic-form" class="topic-form">
-            <input
-              type="text"
-              id="topic-input"
-              placeholder="Add your own"
-              maxlength="80"
-              autocomplete="off"
-              required
-            >
-            <button type="submit" class="btn btn-primary">Add</button>
-          </form>
-
-          <div id="topic-list" class="topic-list"></div>
-
-          <div id="reward-row" class="reward-row hidden">
-            <input type="text" id="reward-input" class="reward-input" placeholder="Playing for: e.g. winner picks the restaurant" maxlength="100" autocomplete="off">
-          </div>
-
-          <div class="setup-actions">
-            <span id="topic-count" class="topic-count hidden"></span>
-            <span id="waiting-host" class="waiting-host hidden">Waiting for host to start…</span>
-            <button id="play-btn" class="btn btn-primary btn-play" disabled>Start Game</button>
-          </div>
+        <div class="setup-actions">
+          <span id="topic-count" class="topic-count hidden"></span>
+          <span id="waiting-host" class="waiting-host hidden">Waiting for host to start…</span>
+          <button id="play-btn" class="btn btn-primary btn-play" disabled>Start Game</button>
         </div>
       </div>
     </section>
