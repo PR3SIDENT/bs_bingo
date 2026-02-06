@@ -53,15 +53,21 @@ let otherCards = {};
 let selectedColor = null;
 let realtimeChannel = null;
 let boardCreatorId = null;
+let boardStatus = null;
 let boardReward = null;
 let rewardSaveTimer = null;
 let activeInspirationCategory = null;
 let winCounts = {};
 let topicIdsAtGameStart = new Set();
+let ideaBankTopics = [];
 
 // Inspiration DOM refs
 const inspirationPills = document.getElementById('inspiration-pills');
 const inspirationChips = document.getElementById('inspiration-chips');
+
+// Idea Bank DOM refs
+const ideaBankEl = document.getElementById('idea-bank');
+const ideaBankChipsEl = document.getElementById('idea-bank-chips');
 
 // Next Round DOM refs
 const nextRoundSection = document.getElementById('next-round-section');
@@ -87,7 +93,7 @@ async function init() {
   // Load board
   const { data: board, error } = await supabase
     .from('boards')
-    .select('id, name, created_by, created_at, reward')
+    .select('id, name, created_by, created_at, reward, status')
     .eq('id', boardId)
     .single();
 
@@ -98,6 +104,7 @@ async function init() {
 
   boardNameEl.innerHTML = `What does <span class="board-name-highlight">${escapeHtml(board.name)}</span> always say?`;
   boardCreatorId = board.created_by;
+  boardStatus = board.status || 'staging';
   boardReward = board.reward || '';
   document.title = `${board.name}'s Bull$hit Bingo`;
   startGameTimer(board.created_at);
@@ -131,13 +138,15 @@ async function init() {
   myPlayer = allPlayers.find((p) => p.user_id === session.user.id) || null;
 
   if (myPlayer) {
-    await tryLoadMyCard();
-    await loadOtherCards();
-    // If player exists but has no card yet and board has topics, generate one
-    if (!myCard && topics.length >= MIN_TOPICS) {
-      await enterPlayMode();
-    } else if (!myCard) {
-      // Show setup for everyone (host or non-creator)
+    if (boardStatus === 'playing') {
+      await tryLoadMyCard();
+      await loadOtherCards();
+      // If board is playing but we don't have a card yet, generate one
+      if (!myCard) {
+        await enterPlayMode();
+      }
+    } else {
+      // Board is in staging — show setup regardless of any stale card data
       showSetupForEveryone();
     }
   } else {
@@ -212,6 +221,7 @@ function showSetupForEveryone() {
   renderTopicList();
   updateTopicCount();
   initInspiration();
+  loadIdeaBank();
 }
 
 function showJoinWithSetup() {
@@ -223,6 +233,7 @@ function showJoinWithSetup() {
     waitingHostEl.classList.add('hidden');
     updateTopicCount();
     initInspiration();
+    loadIdeaBank();
   }
   // Non-creators just see the join bar until they join
   joinNameInput.focus();
@@ -310,6 +321,7 @@ function subscribeRealtime() {
         renderTopicList();
         updateTopicCount();
         renderQuoteChips();
+        renderIdeaBank();
       }
       if (isInPlayMode()) renderNextRoundList();
     })
@@ -319,6 +331,7 @@ function subscribeRealtime() {
       renderTopicList();
       updateTopicCount();
       renderQuoteChips();
+      renderIdeaBank();
       if (isInPlayMode()) renderNextRoundList();
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -335,10 +348,6 @@ function subscribeRealtime() {
       if (row.player_id !== myPlayer?.id) {
         // Another player got a new card — fetch summary
         loadOtherCardFor(row.player_id);
-        // If we don't have a card yet, auto-generate ours (e.g. after a reset)
-        if (myPlayer && !myCard && !isCreator()) {
-          enterPlayMode();
-        }
       }
     })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'player_cards', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -375,6 +384,28 @@ function subscribeRealtime() {
           showSetupForEveryone();
         }
       }, 200);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'boards', filter: `id=eq.${boardId}` }, async (payload) => {
+      const newStatus = payload.new.status;
+      if (newStatus === boardStatus) return; // no change
+      boardStatus = newStatus;
+
+      if (boardStatus === 'playing') {
+        // Game started — auto-generate card and enter play mode
+        if (myPlayer && !myCard) {
+          await enterPlayMode();
+        }
+      } else if (boardStatus === 'staging') {
+        // Game reset — clear cards and return to setup
+        myCard = null;
+        otherCards = {};
+        topicIdsAtGameStart = new Set();
+        renderOwnCard();
+        renderOtherCards();
+        bingoOverlay.classList.add('hidden');
+        playSection.classList.add('hidden');
+        showSetupForEveryone();
+      }
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bingo_events', filter: `board_id=eq.${boardId}` }, async (payload) => {
       const evt = payload.new;
@@ -459,13 +490,8 @@ joinForm.addEventListener('submit', async (e) => {
     joinSection.style.cssText = '';
   }, 300);
 
-  // If game is already running (other players have cards), jump straight in
-  const { count } = await supabase
-    .from('player_cards')
-    .select('id', { count: 'exact', head: true })
-    .eq('board_id', boardId);
-
-  if (topics.length >= MIN_TOPICS && (isCreator() || count > 0)) {
+  // If game is already running, jump straight into play mode
+  if (boardStatus === 'playing') {
     await enterPlayMode();
   } else {
     showSetupForEveryone();
@@ -551,6 +577,7 @@ topicListEl.addEventListener('click', async (e) => {
   renderTopicList();
   updateTopicCount();
   renderQuoteChips();
+  renderIdeaBank();
 
   const { error } = await supabase.from('topics').delete().eq('id', id);
   if (error) {
@@ -560,11 +587,33 @@ topicListEl.addEventListener('click', async (e) => {
       renderTopicList();
       updateTopicCount();
       renderQuoteChips();
+      renderIdeaBank();
     }
   }
 });
 
 // --- Play Mode ---
+
+async function startGame() {
+  // Host-only: transition the board to 'playing' via the API
+  const res = await fetch('/api/start-game', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ boardId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.error(err.error || 'Failed to start game');
+    return;
+  }
+
+  boardStatus = 'playing';
+  await enterPlayMode();
+}
 
 async function enterPlayMode() {
   if (!myPlayer) {
@@ -607,7 +656,7 @@ async function enterPlayMode() {
   await loadOtherCards();
 }
 
-playBtn.addEventListener('click', enterPlayMode);
+playBtn.addEventListener('click', startGame);
 
 let resetConfirmPending = false;
 
@@ -1072,6 +1121,95 @@ async function addInspirationTopic(text, chipEl) {
   } else {
     const t = topics.find((t) => t.id === tempId);
     if (t) t.id = data.id;
+  }
+}
+
+// --- Idea Bank ---
+
+async function loadIdeaBank() {
+  if (!session?.user?.id) return;
+
+  const { data, error } = await supabase
+    .from('topics')
+    .select('text')
+    .eq('created_by', session.user.id)
+    .neq('board_id', boardId);
+
+  if (error || !data) return;
+
+  // Deduplicate by lowercase text
+  const seen = new Set();
+  ideaBankTopics = [];
+  for (const row of data) {
+    const key = row.text.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      ideaBankTopics.push(row.text);
+    }
+  }
+
+  renderIdeaBank();
+}
+
+function renderIdeaBank() {
+  if (ideaBankTopics.length === 0) {
+    ideaBankEl.classList.add('hidden');
+    return;
+  }
+
+  ideaBankEl.classList.remove('hidden');
+  ideaBankChipsEl.innerHTML = '';
+
+  const existingTexts = new Set(topics.map((t) => t.text.toLowerCase()));
+
+  ideaBankTopics.forEach((text) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    const isUsed = existingTexts.has(text.toLowerCase());
+    chip.className = 'inspiration-chip' + (isUsed ? ' inspiration-chip--used' : '');
+    chip.textContent = text;
+    if (!isUsed) {
+      chip._handler = () => addIdeaBankTopic(text, chip);
+      chip.addEventListener('click', chip._handler);
+    }
+    ideaBankChipsEl.appendChild(chip);
+  });
+}
+
+async function addIdeaBankTopic(text, chipEl) {
+  if (!myPlayer) return;
+
+  chipEl.classList.add('inspiration-chip--adding');
+  chipEl.removeEventListener('click', chipEl._handler);
+
+  await new Promise((r) => setTimeout(r, 300));
+  chipEl.classList.remove('inspiration-chip--adding');
+  chipEl.classList.add('inspiration-chip--used');
+
+  // Optimistic: add topic immediately
+  const tempId = `temp-${Date.now()}`;
+  topics.push({ id: tempId, text, created_by: session.user.id });
+  renderTopicList();
+  updateTopicCount();
+  renderQuoteChips();
+
+  const { data, error } = await supabase
+    .from('topics')
+    .insert({ board_id: boardId, text, created_by: session.user.id })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Failed to add idea bank topic:', error.message);
+    topics = topics.filter((t) => t.id !== tempId);
+    renderTopicList();
+    updateTopicCount();
+    renderQuoteChips();
+    renderIdeaBank();
+  } else {
+    const t = topics.find((t) => t.id === tempId);
+    if (t) t.id = data.id;
+    renderIdeaBank();
   }
 }
 

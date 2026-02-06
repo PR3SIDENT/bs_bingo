@@ -1856,6 +1856,21 @@ input[type="email"]:focus {
   100% { transform: scale(1); background: rgba(245, 158, 11, 0.06); }
 }
 
+/* === Idea Bank === */
+.idea-bank {
+  margin-top: var(--space-4);
+  border-top: 1px solid rgba(212, 165, 116, 0.12);
+  padding-top: var(--space-3);
+}
+
+.panel-subheading {
+  font-size: var(--text-sm);
+  color: var(--tan);
+  margin: 0 0 var(--space-2);
+  font-weight: 500;
+  opacity: 0.7;
+}
+
 /* === Next Round Topics === */
 .next-round-section {
   margin-top: var(--space-5);
