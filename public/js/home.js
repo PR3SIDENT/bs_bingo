@@ -18,6 +18,8 @@ const setupModal = document.getElementById('setup-modal');
 const setupForm = document.getElementById('setup-form');
 const setupNameInput = document.getElementById('setup-name');
 
+const navSignIn = document.getElementById('nav-sign-in');
+
 // Landing page (index.html) has no forms — only /create does
 const hasAppForms = !!createForm;
 
@@ -25,6 +27,15 @@ let currentProfile = null;
 
 function isAnonymous(session) {
   return session?.user?.is_anonymous === true;
+}
+
+// Update nav sign-in link on landing page
+function updateNavSignIn(session, profile) {
+  if (!navSignIn) return;
+  if (session && !isAnonymous(session) && profile?.display_name) {
+    navSignIn.textContent = profile.display_name;
+    navSignIn.title = 'Go to your boards';
+  }
 }
 
 function needsProfileSetup(session, profile) {
@@ -62,6 +73,7 @@ onAuthStateChange(async (session) => {
     const profile = await getProfile(session.user.id);
     currentProfile = profile;
     updateUserUI(session, profile);
+    updateNavSignIn(session, profile);
   } else {
     updateUserUI(session, null);
   }
@@ -74,6 +86,7 @@ onAuthStateChange(async (session) => {
     const profile = await getProfile(session.user.id);
     currentProfile = profile;
     updateUserUI(session, profile);
+    updateNavSignIn(session, profile);
   } else {
     updateUserUI(session, null);
   }
