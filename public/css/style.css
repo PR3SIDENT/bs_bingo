@@ -1964,32 +1964,6 @@ input[type="email"]:focus {
 }
 
 /* === Auth / Login === */
-.btn-google {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.75rem 1.5rem;
-  background: var(--brown-dark);
-  color: var(--cream);
-  border: 1px solid rgba(212, 165, 116, 0.25);
-  border-radius: var(--radius-md);
-  font-size: var(--text-base);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: var(--font-body);
-}
-
-.btn-google:hover {
-  border-color: var(--amber);
-  transform: translateY(-1px);
-}
-
-.google-icon {
-  flex-shrink: 0;
-}
 
 .magic-form {
   display: flex;
@@ -2056,24 +2030,6 @@ input[type="email"]:focus {
   text-align: center;
 }
 
-.btn-sign-in {
-  background: var(--brown-dark);
-  border: 2px solid var(--tan);
-  color: var(--cream);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  padding: 0.625rem 1.25rem;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  letter-spacing: 0.01em;
-}
-
-.btn-sign-in:hover {
-  border-color: var(--amber);
-  background: var(--brown-light);
-}
 
 .btn-link {
   background: none;

@@ -1,5 +1,5 @@
 import { supabase } from './supabase-client.js';
-import { getSession, getProfile, ensureSession, signInWithGoogle, signInWithMagicLink, signOut, onAuthStateChange } from './auth.js';
+import { getSession, getProfile, ensureSession, signInWithMagicLink, signOut, onAuthStateChange } from './auth.js';
 
 const userBar = document.getElementById('user-bar');
 const userNameEl = document.getElementById('user-name');
@@ -7,7 +7,6 @@ const signInPrompt = document.getElementById('sign-in-prompt');
 const showSignInBtn = document.getElementById('show-sign-in-btn');
 const authModal = document.getElementById('auth-modal');
 const closeAuthModalBtn = document.getElementById('close-auth-modal');
-const googleBtn = document.getElementById('google-btn');
 const magicForm = document.getElementById('magic-form');
 const magicEmailInput = document.getElementById('magic-email');
 const magicStatus = document.getElementById('magic-status');
@@ -79,11 +78,6 @@ if (hasAppForms) {
 
   authModal.addEventListener('click', (e) => {
     if (e.target === authModal) authModal.classList.add('hidden');
-  });
-
-  // Google sign-in
-  googleBtn.addEventListener('click', () => {
-    signInWithGoogle();
   });
 
   // Magic link
