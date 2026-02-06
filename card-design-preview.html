@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Design Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown: #3D2317;
+      --cream: #FFF8E7;
+      --amber: #F59E0B;
+      --amber-dark: #D97706;
+      --amber-light: #FCD34D;
+      --tan: #D4A574;
+      --brown-dark: #2A1810;
+      --brown-light: #5C3D2E;
+      --white: #FFFFFF;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--brown);
+      color: var(--cream);
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .option {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .option-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+
+    .card-owner {
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #FF6B35;
+    }
+
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.3rem;
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.55rem;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.2;
+      transition: all 0.15s;
+    }
+
+    /* ===== Option 1: Cream Card ===== */
+    .card-cream {
+      background: var(--cream);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .card-cream .card-owner { color: var(--brown); }
+
+    .card-cream .cell {
+      background: var(--white);
+      border: 2px solid var(--tan);
+      color: var(--brown);
+    }
+
+    .card-cream .cell.free {
+      background: var(--brown);
+      border-color: var(--brown);
+      color: var(--cream);
+      font-weight: 600;
+    }
+
+    .card-cream .cell.marked {
+      background: var(--amber);
+      border-color: var(--amber-dark);
+      color: var(--brown);
+    }
+
+    .card-cream .cell.winner {
+      background: var(--amber-light);
+      border-color: var(--amber);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    }
+
+    /* ===== Option 2: Dark Card ===== */
+    .card-dark {
+      background: var(--brown-light);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid rgba(212, 165, 116, 0.15);
+    }
+
+    .card-dark .card-owner { color: var(--cream); }
+
+    .card-dark .cell {
+      background: rgba(255, 248, 231, 0.07);
+      border: 2px solid rgba(212, 165, 116, 0.2);
+      color: var(--cream);
+    }
+
+    .card-dark .cell.free {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .card-dark .cell.marked {
+      background: var(--amber);
+      border-color: var(--amber-dark);
+      color: var(--brown);
+    }
+
+    .card-dark .cell.winner {
+      background: var(--amber-light);
+      border-color: var(--amber);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+    }
+
+    /* ===== Option 3: Glass Card ===== */
+    .card-glass {
+      background: rgba(92, 61, 46, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid rgba(212, 165, 116, 0.12);
+    }
+
+    .card-glass .card-owner { color: var(--cream); }
+
+    .card-glass .cell {
+      background: rgba(255, 248, 231, 0.05);
+      border: 1px solid rgba(212, 165, 116, 0.15);
+      color: rgba(255, 248, 231, 0.85);
+    }
+
+    .card-glass .cell.free {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.25);
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .card-glass .cell.marked {
+      background: rgba(245, 158, 11, 0.85);
+      border-color: var(--amber-dark);
+      color: var(--brown);
+    }
+
+    .card-glass .cell.winner {
+      background: var(--amber-light);
+      border-color: var(--amber);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; max-width: 400px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Bingo Card Design Options</h1>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const QUOTES = [
+      'Back in my day...', "It's the seed oils.", 'Must be nice.',
+      'Per my last email.', "I'm an empath.", 'Kids these days...',
+      'Do your own research.', 'Bless your heart.', 'I barely slept.',
+      'As a mother...', 'Have you tried yoga?', 'You look tired.',
+      'FREE',
+      'Nobody wants to work.', "I'm just being honest.",
+      "That's not a real job.", 'Mercury retrograde.', 'Both sides...',
+      "We're like family.", 'Circling back.', "I'm manifesting.",
+      'Sure, Jan.', "It's organic.", 'Few understand.', 'Rest days? Weak.',
+    ];
+
+    const MARKED = [0, 3, 6, 7, 12, 15, 18, 21, 24];
+    const WINNERS = [0, 6, 12, 18, 24];
+
+    const OPTIONS = [
+      { label: 'Option 1: Cream Card', cls: 'card-cream' },
+      { label: 'Option 2: Dark Card', cls: 'card-dark' },
+      { label: 'Option 3: Glass Card', cls: 'card-glass' },
+    ];
+
+    const grid = document.getElementById('grid');
+
+    OPTIONS.forEach(opt => {
+      const col = document.createElement('div');
+      col.className = 'option';
+
+      col.innerHTML = `<span class="option-label">${opt.label}</span>`;
+
+      const card = document.createElement('div');
+      card.className = opt.cls;
+
+      const owner = document.createElement('div');
+      owner.className = 'card-owner';
+      owner.innerHTML = '<span class="dot"></span> You';
+      card.appendChild(owner);
+
+      const g = document.createElement('div');
+      g.className = 'bingo-grid';
+
+      QUOTES.forEach((text, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (text === 'FREE') cell.classList.add('free', 'marked');
+        if (MARKED.includes(i)) cell.classList.add('marked');
+        if (WINNERS.includes(i)) cell.classList.add('winner');
+        cell.textContent = text;
+        g.appendChild(cell);
+      });
+
+      card.appendChild(g);
+      col.appendChild(card);
+      grid.appendChild(col);
+    });
+  </script>
+</body>
+</html>

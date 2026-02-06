@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#4A2C1A"/>
+      <stop offset="100%" stop-color="#3D2317"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+
+  <g opacity="0.03">
+    <line x1="0" y1="270" x2="1080" y2="270" stroke="#FFF8E7" stroke-width="1"/>
+    <line x1="0" y1="540" x2="1080" y2="540" stroke="#FFF8E7" stroke-width="1"/>
+    <line x1="0" y1="810" x2="1080" y2="810" stroke="#FFF8E7" stroke-width="1"/>
+    <line x1="360" y1="0" x2="360" y2="1080" stroke="#FFF8E7" stroke-width="1"/>
+    <line x1="720" y1="0" x2="720" y2="1080" stroke="#FFF8E7" stroke-width="1"/>
+  </g>
+
+  <rect x="0" y="0" width="1080" height="4" fill="#F59E0B"/>
+
+  <!-- Logo -->
+  <g transform="translate(40, 36)">
+    <rect x="0" y="0" width="16" height="16" rx="3" fill="#D4A574" opacity="0.6"/>
+    <rect x="20" y="0" width="16" height="16" rx="3" fill="#F59E0B"/>
+    <rect x="40" y="0" width="16" height="16" rx="3" fill="#D4A574" opacity="0.6"/>
+    <rect x="0" y="20" width="16" height="16" rx="3" fill="#F59E0B"/>
+    <rect x="20" y="20" width="16" height="16" rx="3" fill="#D4A574" opacity="0.6"/>
+    <rect x="40" y="20" width="16" height="16" rx="3" fill="#F59E0B"/>
+    <rect x="0" y="40" width="16" height="16" rx="3" fill="#D4A574" opacity="0.6"/>
+    <rect x="20" y="40" width="16" height="16" rx="3" fill="#F59E0B"/>
+    <rect x="40" y="40" width="16" height="16" rx="3" fill="#D4A574" opacity="0.6"/>
+  </g>
+  <text x="108" y="72" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="#FFF8E7">Bull<tspan fill="#F59E0B">$</tspan>hit<tspan fill="#F59E0B">!</tspan> Bingo</text>
+
+  <text x="540" y="148" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="400" font-size="22" fill="#D4A574" letter-spacing="3">A CARD FOR</text>
+  <text x="540" y="200" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="52" fill="#FFF8E7">The Group Chat</text>
+
+  <!-- Row 1 -->
+  <rect x="68"  y="260" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="308" y="260" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="548" y="260" width="220" height="160" rx="14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"/>
+  <rect x="788" y="260" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+
+  <!-- Row 2 -->
+  <rect x="68"  y="440" width="220" height="160" rx="14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"/>
+  <rect x="308" y="440" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="548" y="440" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="788" y="440" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+
+  <!-- Row 3 -->
+  <rect x="68"  y="620" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="308" y="620" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="548" y="620" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="788" y="620" width="220" height="160" rx="14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"/>
+
+  <!-- Row 4 -->
+  <rect x="68"  y="800" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="308" y="800" width="220" height="160" rx="14" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"/>
+  <rect x="548" y="800" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+  <rect x="788" y="800" width="220" height="160" rx="14" fill="#5C3D2E" stroke="#7A5A48" stroke-width="1"/>
+
+  <!-- Row 1 text -->
+  <text x="178" y="330" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">Someone</text>
+  <text x="178" y="354" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">leaves the</text>
+  <text x="178" y="378" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">group</text>
+
+  <text x="418" y="330" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">"Wanna grab</text>
+  <text x="418" y="354" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">food?"</text>
+  <text x="418" y="378" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="14" fill="#D4A574">(no one responds)</text>
+
+  <text x="658" y="330" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">Plans made</text>
+  <text x="658" y="354" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">and cancelled</text>
+  <text x="658" y="378" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">same day</text>
+
+  <text x="898" y="330" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">Someone</text>
+  <text x="898" y="354" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">sends a TikTok</text>
+  <text x="898" y="378" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">from 2022</text>
+
+  <!-- Row 2 text -->
+  <text x="178" y="510" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">"I'm on</text>
+  <text x="178" y="534" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">my way"</text>
+  <text x="178" y="558" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="14" fill="#5C3D2E">(hasn't left yet)</text>
+
+  <text x="418" y="510" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">50 messages</text>
+  <text x="418" y="534" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">about where</text>
+  <text x="418" y="558" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">to eat</text>
+
+  <text x="658" y="510" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">"Did you see</text>
+  <text x="658" y="534" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">what they</text>
+  <text x="658" y="558" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">posted?"</text>
+
+  <text x="898" y="510" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">Name change</text>
+  <text x="898" y="534" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">nobody asked</text>
+  <text x="898" y="558" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">for</text>
+
+  <!-- Row 3 text -->
+  <text x="178" y="690" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">"Who's</text>
+  <text x="178" y="714" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">driving?"</text>
+
+  <text x="418" y="690" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">Screenshot</text>
+  <text x="418" y="714" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">of another</text>
+  <text x="418" y="738" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">group chat</text>
+
+  <text x="658" y="690" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">The one who</text>
+  <text x="658" y="714" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">only reacts</text>
+  <text x="658" y="738" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">with "😂"</text>
+
+  <text x="898" y="690" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">"We should</text>
+  <text x="898" y="714" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">do something</text>
+  <text x="898" y="738" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">this weekend"</text>
+
+  <!-- Row 4 text -->
+  <text x="178" y="870" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">Dead silence</text>
+  <text x="178" y="894" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">for 3 days</text>
+
+  <text x="418" y="870" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">"Guys I have</text>
+  <text x="418" y="894" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="17" fill="#3D2317">tea"</text>
+
+  <text x="658" y="870" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">Passive</text>
+  <text x="658" y="894" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">aggressive</text>
+  <text x="658" y="918" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">"lol ok"</text>
+
+  <text x="898" y="870" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">"I just saw</text>
+  <text x="898" y="894" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="17" fill="#FFF8E7">this"</text>
+  <text x="898" y="918" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="14" fill="#D4A574">(3 hours later)</text>
+
+  <!-- CTA -->
+  <text x="540" y="1020" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="20" fill="#D4A574">Make yours free at</text>
+  <text x="540" y="1050" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="22" fill="#F59E0B">bsbingo.app</text>
+  <rect x="0" y="1076" width="1080" height="4" fill="#F59E0B"/>
+</svg>

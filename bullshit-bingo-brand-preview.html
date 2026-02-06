@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bull$hit! Bingo - Brand Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --brown: #3D2317;
+      --brown-dark: #2A1810;
+      --brown-light: #5C3D2E;
+      --cream: #FFF8E7;
+      --amber: #F59E0B;
+      --amber-dark: #D97706;
+      --amber-light: #FCD34D;
+      --tan: #D4A574;
+      --gray: #9CA3AF;
+      --white: #FFFFFF;
+      --success: #10B981;
+      
+      --font-display: 'Poppins', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      background: #111;
+      font-family: var(--font-body);
+      color: var(--cream);
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 2rem;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--tan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    /* Bingo Icon */
+    .bingo-icon {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 6px;
+      background: var(--cream);
+      border-radius: 6px;
+    }
+
+    .bingo-icon .cell {
+      width: 14px;
+      height: 14px;
+      background: var(--tan);
+      border-radius: 3px;
+    }
+
+    .bingo-icon .cell.marked {
+      background: var(--amber);
+    }
+
+    .bingo-icon.lg {
+      gap: 5px;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .bingo-icon.lg .cell {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+    }
+
+    /* Logo Stacked */
+    .logo-stacked {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-text-stack {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .logo-text-stack .top {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 2rem;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+    }
+
+    .logo-text-stack .top .amber {
+      color: var(--amber);
+    }
+
+    .logo-text-stack .bottom {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--tan);
+      letter-spacing: 0.05em;
+    }
+
+    .logo-text-stack.on-light .top {
+      color: var(--brown);
+    }
+
+    .logo-text-stack.on-light .top .amber {
+      color: var(--amber-dark);
+    }
+
+    /* Logo showcase */
+    .logo-showcase {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .logo-card {
+      padding: 2.5rem 2rem;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-card.on-brown {
+      background: var(--brown);
+    }
+
+    .logo-card.on-cream {
+      background: var(--cream);
+    }
+
+    /* Color swatches */
+    .swatch-grid {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .swatch {
+      text-align: center;
+    }
+
+    .swatch-color {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-md);
+      margin-bottom: 0.5rem;
+    }
+
+    .swatch-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .swatch-hex {
+      font-size: 0.65rem;
+      color: var(--gray);
+      font-family: monospace;
+    }
+
+    /* Typography */
+    .type-sample {
+      background: var(--brown);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .type-headline {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2rem;
+      color: var(--cream);
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .type-body {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--cream);
+      line-height: 1.6;
+      max-width: 500px;
+    }
+
+    .type-body em {
+      color: var(--amber);
+      font-style: normal;
+    }
+
+    /* Buttons */
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      background: var(--brown);
+      padding: 2rem;
+      border-radius: var(--radius-lg);
+    }
+
+    .btn {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--amber);
+      color: var(--brown);
+    }
+
+    .btn-primary:hover {
+      background: var(--amber-dark);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--cream);
+      border: 2px solid var(--tan);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--cream);
+    }
+
+    /* Bingo Card Preview */
+    .bingo-preview-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .bingo-wrapper {
+      padding: 2rem;
+      border-radius: var(--radius-lg);
+    }
+
+    .bingo-wrapper.on-brown {
+      background: var(--brown);
+    }
+
+    .bingo-wrapper.on-cream {
+      background: var(--cream);
+    }
+
+    .bingo-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 0.75rem;
+    }
+
+    .bingo-card.dark {
+      background: var(--brown-light);
+    }
+
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .bingo-cell {
+      aspect-ratio: 1;
+      background: var(--white);
+      border: 2px solid var(--tan);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.2rem;
+      font-family: var(--font-body);
+      font-size: 0.5rem;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.2;
+      color: var(--brown);
+    }
+
+    .bingo-card.dark .bingo-cell {
+      background: var(--brown);
+      border-color: var(--brown);
+      color: var(--cream);
+    }
+
+    .bingo-cell.marked {
+      background: var(--amber);
+      border-color: var(--amber-dark);
+      color: var(--brown);
+    }
+
+    .bingo-cell.free {
+      background: var(--brown);
+      border-color: var(--brown);
+      color: var(--cream);
+      font-weight: 600;
+    }
+
+    .bingo-card.dark .bingo-cell.free {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--brown);
+    }
+
+    /* Form input */
+    .input-preview {
+      background: var(--brown);
+      padding: 2rem;
+      border-radius: var(--radius-lg);
+    }
+
+    .input-label {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--cream);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .input {
+      background: var(--white);
+      border: 2px solid var(--tan);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--brown);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .input::placeholder {
+      color: var(--gray);
+    }
+
+    /* Sample page mockup */
+    .page-mockup {
+      background: var(--brown);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .mockup-logo {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 3rem;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+      margin-bottom: 2rem;
+    }
+
+    .mockup-logo .amber {
+      color: var(--amber);
+    }
+
+    .mockup-headline {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.75rem;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+      margin-bottom: 2rem;
+      line-height: 1.3;
+    }
+
+    .mockup-headline .rotating-word {
+      color: var(--amber);
+      display: inline-block;
+      min-width: 140px;
+      text-align: left;
+    }
+
+    .rotating-word span {
+      display: none;
+    }
+
+    .rotating-word span.active {
+      display: inline;
+    }
+
+    .mockup-cta {
+      display: inline-block;
+      background: var(--amber);
+      color: var(--brown);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.125rem;
+      padding: 1rem 2rem;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+    }
+
+    .mockup-footer {
+      margin-top: 2.5rem;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      color: var(--tan);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-title">Bull$hit! Bingo — Brand Preview</div>
+
+    <!-- Logo -->
+    <div class="section">
+      <div class="section-title">Logo</div>
+      <div class="logo-showcase">
+        <div class="logo-card on-brown">
+          <div class="logo-stacked">
+            <div class="bingo-icon lg">
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+            </div>
+            <div class="logo-text-stack">
+              <span class="top">Bull<span class="amber">$</span>hit!</span>
+              <span class="bottom">Bingo</span>
+            </div>
+          </div>
+        </div>
+        <div class="logo-card on-cream">
+          <div class="logo-stacked">
+            <div class="bingo-icon lg">
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+            </div>
+            <div class="logo-text-stack on-light">
+              <span class="top">Bull<span class="amber">$</span>hit!</span>
+              <span class="bottom">Bingo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colors -->
+    <div class="section">
+      <div class="section-title">Colors</div>
+      <div class="swatch-grid">
+        <div class="swatch">
+          <div class="swatch-color" style="background: #3D2317;"></div>
+          <div class="swatch-name">Brown</div>
+          <div class="swatch-hex">#3D2317</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #FFF8E7; border: 1px solid #333;"></div>
+          <div class="swatch-name">Cream</div>
+          <div class="swatch-hex">#FFF8E7</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #F59E0B;"></div>
+          <div class="swatch-name">Amber</div>
+          <div class="swatch-hex">#F59E0B</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #D97706;"></div>
+          <div class="swatch-name">Amber Dark</div>
+          <div class="swatch-hex">#D97706</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #D4A574;"></div>
+          <div class="swatch-name">Tan</div>
+          <div class="swatch-hex">#D4A574</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #5C3D2E;"></div>
+          <div class="swatch-name">Brown Light</div>
+          <div class="swatch-hex">#5C3D2E</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typography -->
+    <div class="section">
+      <div class="section-title">Typography</div>
+      <div class="type-sample">
+        <div class="type-headline">Make a bingo card for the BS your dad always says.</div>
+        <div class="type-body">Build a board. Mark the squares. Get bingo. <em>You called it.</em></div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="section">
+      <div class="section-title">Buttons</div>
+      <div class="button-row">
+        <button class="btn btn-primary">Build Your Board</button>
+        <button class="btn btn-secondary">Learn More</button>
+      </div>
+    </div>
+
+    <!-- Bingo Cards -->
+    <div class="section">
+      <div class="section-title">Bingo Card</div>
+      <div class="bingo-preview-container">
+        <div class="bingo-wrapper on-brown">
+          <div class="bingo-card">
+            <div class="bingo-grid">
+              <div class="bingo-cell">"Back in my day..."</div>
+              <div class="bingo-cell marked">Mentions CrossFit</div>
+              <div class="bingo-cell">Unsolicited advice</div>
+              <div class="bingo-cell">Same story again</div>
+              <div class="bingo-cell">"Kids these days"</div>
+              
+              <div class="bingo-cell">Humble brag</div>
+              <div class="bingo-cell">Checks phone</div>
+              <div class="bingo-cell marked">"Not political, but..."</div>
+              <div class="bingo-cell">Diet update</div>
+              <div class="bingo-cell">One-ups someone</div>
+              
+              <div class="bingo-cell">"You look tired"</div>
+              <div class="bingo-cell">Dating life?</div>
+              <div class="bingo-cell free">FREE</div>
+              <div class="bingo-cell">Mispronounces</div>
+              <div class="bingo-cell marked">"At your age"</div>
+              
+              <div class="bingo-cell">Their podcast</div>
+              <div class="bingo-cell">"Try yoga"</div>
+              <div class="bingo-cell">Weather talk</div>
+              <div class="bingo-cell">"On Facebook..."</div>
+              <div class="bingo-cell">Traffic rant</div>
+              
+              <div class="bingo-cell marked">"Nobody works"</div>
+              <div class="bingo-cell">Phone photos</div>
+              <div class="bingo-cell">"Buy a house"</div>
+              <div class="bingo-cell">Their broker</div>
+              <div class="bingo-cell">"Sleep when dead"</div>
+            </div>
+          </div>
+        </div>
+        <div class="bingo-wrapper on-cream">
+          <div class="bingo-card dark">
+            <div class="bingo-grid">
+              <div class="bingo-cell">"Back in my day..."</div>
+              <div class="bingo-cell marked">Mentions CrossFit</div>
+              <div class="bingo-cell">Unsolicited advice</div>
+              <div class="bingo-cell">Same story again</div>
+              <div class="bingo-cell">"Kids these days"</div>
+              
+              <div class="bingo-cell">Humble brag</div>
+              <div class="bingo-cell">Checks phone</div>
+              <div class="bingo-cell marked">"Not political, but..."</div>
+              <div class="bingo-cell">Diet update</div>
+              <div class="bingo-cell">One-ups someone</div>
+              
+              <div class="bingo-cell">"You look tired"</div>
+              <div class="bingo-cell">Dating life?</div>
+              <div class="bingo-cell free">FREE</div>
+              <div class="bingo-cell">Mispronounces</div>
+              <div class="bingo-cell marked">"At your age"</div>
+              
+              <div class="bingo-cell">Their podcast</div>
+              <div class="bingo-cell">"Try yoga"</div>
+              <div class="bingo-cell">Weather talk</div>
+              <div class="bingo-cell">"On Facebook..."</div>
+              <div class="bingo-cell">Traffic rant</div>
+              
+              <div class="bingo-cell marked">"Nobody works"</div>
+              <div class="bingo-cell">Phone photos</div>
+              <div class="bingo-cell">"Buy a house"</div>
+              <div class="bingo-cell">Their broker</div>
+              <div class="bingo-cell">"Sleep when dead"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="section">
+      <div class="section-title">Form Input</div>
+      <div class="input-preview">
+        <label class="input-label">Square text</label>
+        <input type="text" class="input" placeholder="What do they always say?">
+      </div>
+    </div>
+
+    <!-- Page Mockup -->
+    <div class="section">
+      <div class="section-title">Landing Page Preview</div>
+      <div class="page-mockup">
+        <div class="logo-stacked" style="justify-content: center; margin-bottom: 2rem;">
+          <div class="bingo-icon lg">
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+          </div>
+          <div class="logo-text-stack" style="font-size: 1.25;">
+            <span class="top" style="font-size: 2.5rem;">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom" style="font-size: 1.5rem;">Bingo</span>
+          </div>
+        </div>
+        <div class="mockup-headline">
+          Make a bingo card for the BS your <span class="rotating-word"><span class="active">dad</span><span>coworker</span><span>uncle</span><span>in-laws</span><span>roommate</span><span>mom</span><span>boss</span><span>neighbor</span></span> always says.
+        </div>
+        <a href="#" class="mockup-cta">Build Your Board</a>
+        <div class="mockup-footer">You're on someone's board too.</div>
+      </div>
+    </div>
+
+    <script>
+      const words = document.querySelectorAll('.rotating-word span');
+      let current = 0;
+      
+      setInterval(() => {
+        words[current].classList.remove('active');
+        current = (current + 1) % words.length;
+        words[current].classList.add('active');
+      }, 2000);
+    </script>
+
+  </div>
+</body>
+</html>

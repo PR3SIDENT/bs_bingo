@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bull$hit! Bingo - Stacked Icon Variations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --brown: #3D2317;
+      --cream: #FFF8E7;
+      --amber: #F59E0B;
+      --amber-dark: #D97706;
+      --tan: #D4A574;
+    }
+
+    body {
+      background: #0a0a0a;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 2rem;
+    }
+
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .logo-card {
+      background: var(--brown);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      gap: 1rem;
+    }
+
+    .logo-card.wide {
+      grid-column: span 2;
+    }
+
+    .logo-card.full {
+      grid-column: span 3;
+    }
+
+    .logo-card-label {
+      font-size: 0.6rem;
+      color: var(--tan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.5rem;
+    }
+
+    /* Bingo Icon */
+    .bingo-icon {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 6px;
+      background: var(--cream);
+      border-radius: 6px;
+    }
+
+    .bingo-icon .cell {
+      width: 14px;
+      height: 14px;
+      background: var(--tan);
+      border-radius: 3px;
+    }
+
+    .bingo-icon .cell.marked {
+      background: var(--amber);
+    }
+
+    .bingo-icon.lg {
+      gap: 5px;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .bingo-icon.lg .cell {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+    }
+
+    .bingo-icon.xl {
+      gap: 6px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .bingo-icon.xl .cell {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+    }
+
+    /* Stacked Logo Layouts */
+    .logo-stacked {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-text-stack {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .logo-text-stack .top {
+      font-weight: 900;
+      font-size: 2rem;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+    }
+
+    .logo-text-stack .top .amber {
+      color: var(--amber);
+    }
+
+    .logo-text-stack .bottom {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--tan);
+      letter-spacing: 0.05em;
+    }
+
+    /* Size variations */
+    .logo-text-stack.sm .top {
+      font-size: 1.5rem;
+    }
+
+    .logo-text-stack.sm .bottom {
+      font-size: 1rem;
+    }
+
+    .logo-text-stack.lg .top {
+      font-size: 2.5rem;
+    }
+
+    .logo-text-stack.lg .bottom {
+      font-size: 1.5rem;
+    }
+
+    .logo-text-stack.xl .top {
+      font-size: 3rem;
+    }
+
+    .logo-text-stack.xl .bottom {
+      font-size: 1.75rem;
+    }
+
+    /* Bingo color variations */
+    .logo-text-stack .bottom.cream {
+      color: var(--cream);
+    }
+
+    .logo-text-stack .bottom.amber {
+      color: var(--amber);
+    }
+
+    /* Icon position variations */
+    .logo-stacked.icon-right {
+      flex-direction: row-reverse;
+    }
+
+    .logo-stacked.icon-top {
+      flex-direction: column;
+    }
+
+    /* Centered version */
+    .logo-centered {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-centered .main-text {
+      font-weight: 900;
+      font-size: 2.25rem;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+    }
+
+    .logo-centered .main-text .amber {
+      color: var(--amber);
+    }
+
+    .logo-centered .sub-text {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--tan);
+      letter-spacing: 0.1em;
+    }
+
+    /* With icon centered */
+    .logo-centered-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-centered-icon .icon-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bull$hit! Bingo - Stacked with Icon</h1>
+
+    <div class="logo-grid">
+      
+      <!-- Icon Left, Bingo Below -->
+      <div class="logo-card">
+        <div class="logo-stacked">
+          <div class="bingo-icon lg">
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+          </div>
+          <div class="logo-text-stack">
+            <span class="top">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom">Bingo</span>
+          </div>
+        </div>
+        <span class="logo-card-label">Icon left, tan bingo</span>
+      </div>
+
+      <!-- Icon Left, Cream Bingo -->
+      <div class="logo-card">
+        <div class="logo-stacked">
+          <div class="bingo-icon lg">
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+          </div>
+          <div class="logo-text-stack">
+            <span class="top">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom cream">Bingo</span>
+          </div>
+        </div>
+        <span class="logo-card-label">Icon left, cream bingo</span>
+      </div>
+
+      <!-- Icon Left, Amber Bingo -->
+      <div class="logo-card">
+        <div class="logo-stacked">
+          <div class="bingo-icon lg">
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+          </div>
+          <div class="logo-text-stack">
+            <span class="top">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom amber">Bingo</span>
+          </div>
+        </div>
+        <span class="logo-card-label">Icon left, amber bingo</span>
+      </div>
+
+      <!-- Icon Right -->
+      <div class="logo-card">
+        <div class="logo-stacked icon-right">
+          <div class="bingo-icon lg">
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+          </div>
+          <div class="logo-text-stack">
+            <span class="top">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom">Bingo</span>
+          </div>
+        </div>
+        <span class="logo-card-label">Icon right</span>
+      </div>
+
+      <!-- Larger Size -->
+      <div class="logo-card wide">
+        <div class="logo-stacked">
+          <div class="bingo-icon xl">
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+          </div>
+          <div class="logo-text-stack lg">
+            <span class="top">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom">Bingo</span>
+          </div>
+        </div>
+        <span class="logo-card-label">Larger scale</span>
+      </div>
+
+      <!-- Small / Nav Size -->
+      <div class="logo-card">
+        <div class="logo-stacked">
+          <div class="bingo-icon">
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+          </div>
+          <div class="logo-text-stack sm">
+            <span class="top">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom">Bingo</span>
+          </div>
+        </div>
+        <span class="logo-card-label">Nav / small size</span>
+      </div>
+
+      <!-- Centered Icon Above -->
+      <div class="logo-card">
+        <div class="logo-centered-icon">
+          <div class="bingo-icon lg">
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+            <div class="cell"></div>
+            <div class="cell marked"></div>
+            <div class="cell"></div>
+          </div>
+          <div class="logo-text-stack" style="align-items: center;">
+            <span class="top">Bull<span class="amber">$</span>hit!</span>
+            <span class="bottom">Bingo</span>
+          </div>
+        </div>
+        <span class="logo-card-label">Icon above, centered</span>
+      </div>
+
+      <!-- Icon integrated with text -->
+      <div class="logo-card wide">
+        <div class="logo-centered-icon">
+          <div class="icon-row">
+            <div class="bingo-icon">
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+              <div class="cell"></div>
+              <div class="cell marked"></div>
+            </div>
+            <span style="font-weight: 900; font-size: 2rem; color: var(--cream);">Bull<span style="color: var(--amber);">$</span>hit!</span>
+          </div>
+          <span style="font-weight: 700; font-size: 1.5rem; color: var(--tan); letter-spacing: 0.15em;">BINGO</span>
+        </div>
+        <span class="logo-card-label">Icon inline with Bull$hit!, Bingo below</span>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
