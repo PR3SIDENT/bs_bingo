@@ -35,6 +35,7 @@ function updateUserUI(session, profile) {
     signInPrompt.classList.add('hidden');
   } else {
     userBar.classList.add('hidden');
+    if (signInPrompt) signInPrompt.classList.remove('hidden');
   }
 }
 
