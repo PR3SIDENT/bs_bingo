@@ -1148,6 +1148,20 @@ async function addInspirationTopic(text, chipEl) {
 
 // --- Idea Bank ---
 
+const DISMISSED_KEY = 'dismissed_past_ideas';
+
+function getDismissedIdeas() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]'));
+  } catch { return new Set(); }
+}
+
+function dismissIdea(text) {
+  const dismissed = getDismissedIdeas();
+  dismissed.add(text.toLowerCase());
+  try { localStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissed])); } catch {}
+}
+
 async function loadIdeaBank() {
   if (!session?.user?.id) return;
 
@@ -1159,12 +1173,13 @@ async function loadIdeaBank() {
 
   if (error || !data) return;
 
-  // Deduplicate by lowercase text
+  // Deduplicate by lowercase text, exclude dismissed
   const seen = new Set();
+  const dismissed = getDismissedIdeas();
   ideaBankTopics = [];
   for (const row of data) {
     const key = row.text.toLowerCase();
-    if (!seen.has(key)) {
+    if (!seen.has(key) && !dismissed.has(key)) {
       seen.add(key);
       ideaBankTopics.push(row.text);
     }
@@ -1198,6 +1213,9 @@ function renderIdeaBank() {
   const existingTexts = new Set(topics.map((t) => t.text.toLowerCase()));
 
   ideaBankTopics.forEach((text) => {
+    const wrapper = document.createElement('span');
+    wrapper.className = 'idea-bank-chip-wrapper';
+
     const chip = document.createElement('button');
     chip.type = 'button';
     const isUsed = existingTexts.has(text.toLowerCase());
@@ -1207,7 +1225,22 @@ function renderIdeaBank() {
       chip._handler = () => addIdeaBankTopic(text, chip);
       chip.addEventListener('click', chip._handler);
     }
-    ideaBankChipsEl.appendChild(chip);
+
+    const dismiss = document.createElement('button');
+    dismiss.type = 'button';
+    dismiss.className = 'idea-bank-dismiss';
+    dismiss.innerHTML = '&times;';
+    dismiss.title = 'Remove from past ideas';
+    dismiss.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissIdea(text);
+      ideaBankTopics = ideaBankTopics.filter((t) => t.toLowerCase() !== text.toLowerCase());
+      renderIdeaBank();
+    });
+
+    wrapper.appendChild(chip);
+    wrapper.appendChild(dismiss);
+    ideaBankChipsEl.appendChild(wrapper);
   });
 }
 

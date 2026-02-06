@@ -1958,7 +1958,35 @@ input[type="email"]:focus {
   100% { transform: scale(1); background: rgba(245, 158, 11, 0.06); }
 }
 
-/* (Idea bank styles removed — folded into widget-body) */
+/* === Idea Bank Chips === */
+.idea-bank-chip-wrapper {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.idea-bank-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: -4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: rgba(212, 165, 116, 0.35);
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.idea-bank-dismiss:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--error);
+}
 
 /* === Next Round Topics === */
 .next-round-section {
