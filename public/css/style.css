@@ -1494,7 +1494,7 @@ input[type="email"]:focus {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin-top: auto;
+  margin-top: var(--space-5);
 }
 
 .setup-actions-row {
