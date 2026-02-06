@@ -29,6 +29,16 @@ export default async function handler(req, res) {
   if (player.user_id !== user.id) return res.status(403).json({ error: 'Not your player' });
   if (player.board_id !== boardId) return res.status(400).json({ error: 'Player not on this board' });
 
+  // Guard: board must be in 'playing' status
+  const { data: board, error: boardErr } = await supabaseAdmin
+    .from('boards')
+    .select('status')
+    .eq('id', boardId)
+    .single();
+
+  if (boardErr || !board) return res.status(404).json({ error: 'Board not found' });
+  if (board.status !== 'playing') return res.status(400).json({ error: 'Game has not started yet' });
+
   // Fetch topics
   const { data: topics, error: topicsErr } = await supabaseAdmin
     .from('topics')
