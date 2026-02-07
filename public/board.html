@@ -103,8 +103,17 @@
           </div>
         </div>
 
-        <div id="reward-row" class="reward-row hidden">
-          <input type="text" id="reward-input" class="reward-input" placeholder="Playing for: e.g. winner picks the restaurant" maxlength="100" autocomplete="off">
+        <div id="stakes-card" class="stakes-card">
+          <div class="stakes-header">
+            <span class="stakes-heading">Table Stakes</span>
+            <div id="stakes-roster" class="stakes-roster"></div>
+          </div>
+          <input type="text" id="stakes-input" class="stakes-input hidden" placeholder="e.g. loser buys drinks" maxlength="100" autocomplete="off">
+          <div id="stakes-display" class="stakes-display"></div>
+          <div id="stakes-toggle-row" class="stakes-toggle-row hidden">
+            <button type="button" id="stakes-in-btn" class="stakes-btn stakes-btn--in">I'm In</button>
+            <button type="button" id="stakes-out-btn" class="stakes-btn stakes-btn--out">I'm Out</button>
+          </div>
         </div>
 
         <div class="setup-actions">
@@ -155,6 +164,7 @@
     <!-- Game Bar -->
     <div class="game-bar">
       <div class="game-bar-tools">
+        <span id="game-status-badge" class="game-status-badge">PLANNING</span>
         <div id="game-timer" class="game-bar-timer hidden">
           <span class="timer-dot"></span>
           <span id="timer-label" class="timer-label"></span>

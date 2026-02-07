@@ -38,9 +38,15 @@ const joinSubmitBtn = document.getElementById('join-submit-btn');
 const myCardLabel = document.getElementById('my-card-label');
 const otherPlayersEl = document.getElementById('other-players');
 const waitingHostEl = document.getElementById('waiting-host');
-const rewardRow = document.getElementById('reward-row');
-const rewardInput = document.getElementById('reward-input');
 const rewardDisplay = document.getElementById('reward-display');
+const gameStatusBadge = document.getElementById('game-status-badge');
+const stakesCard = document.getElementById('stakes-card');
+const stakesInput = document.getElementById('stakes-input');
+const stakesDisplay = document.getElementById('stakes-display');
+const stakesInBtn = document.getElementById('stakes-in-btn');
+const stakesOutBtn = document.getElementById('stakes-out-btn');
+const stakesToggleRow = document.getElementById('stakes-toggle-row');
+const stakesRosterEl = document.getElementById('stakes-roster');
 const playerRosterEl = document.getElementById('player-roster');
 
 let session = null;
@@ -123,6 +129,7 @@ async function init() {
   boardReward = board.reward || '';
   document.title = `${board.name}'s Bull$hit Bingo`;
   startGameTimer(board.created_at);
+  updateGameStatusBadge();
 
   // Load topics
   const { data: topicsData } = await supabase
@@ -134,13 +141,13 @@ async function init() {
   renderTopicList();
   updateTopicCount();
 
-  // Reward setup
-  initReward();
+  // Stakes setup
+  initStakes();
 
   // Load players
   const { data: playersData } = await supabase
     .from('players')
-    .select('id, user_id, name, color')
+    .select('id, user_id, name, color, stake_in')
     .eq('board_id', boardId)
     .order('created_at', { ascending: true });
   allPlayers = playersData || [];
@@ -236,6 +243,8 @@ function showSetupForEveryone() {
   renderTopicList();
   updateTopicCount();
   loadIdeaBank();
+  renderStakesDisplay();
+  renderStakesRoster();
 }
 
 function showJoinWithSetup() {
@@ -246,7 +255,6 @@ function showJoinWithSetup() {
     playBtn.classList.remove('hidden');
     waitingHostEl.classList.add('hidden');
     updateTopicCount();
-    populateSetupQuotes();
     loadIdeaBank();
   }
   // Non-creators just see the join bar until they join
@@ -353,7 +361,16 @@ function subscribeRealtime() {
         allPlayers.push(player);
         updateTopicCount();
         renderPlayerRoster();
+        renderStakesRoster();
         renderOtherCards();
+      }
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players', filter: `board_id=eq.${boardId}` }, (payload) => {
+      const updated = payload.new;
+      const p = allPlayers.find(p => p.id === updated.id);
+      if (p) {
+        p.stake_in = updated.stake_in;
+        renderStakesRoster();
       }
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'player_cards', filter: `board_id=eq.${boardId}` }, (payload) => {
@@ -399,9 +416,20 @@ function subscribeRealtime() {
       }, 200);
     })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'boards', filter: `id=eq.${boardId}` }, async (payload) => {
+      // Pick up live reward/wager changes
+      if (payload.new.reward !== undefined) {
+        const newReward = payload.new.reward || '';
+        if (newReward !== boardReward) {
+          boardReward = newReward;
+          renderStakesDisplay();
+          updateRewardDisplay();
+        }
+      }
+
       const newStatus = payload.new.status;
       if (newStatus === boardStatus) return; // no change
       boardStatus = newStatus;
+      updateGameStatusBadge();
 
       if (boardStatus === 'playing') {
         // Game started — auto-generate card and enter play mode
@@ -537,11 +565,9 @@ function updateTopicCount() {
     playBtn.disabled = count < MIN_TOPICS;
     if (count < MIN_TOPICS) {
       playBtn.textContent = `Need ${MIN_TOPICS - count} more`;
-      rewardRow.classList.add('hidden');
     } else {
       const gs = getGridSize(count);
       playBtn.textContent = `Start Game (${gs}\u00d7${gs})`;
-      rewardRow.classList.remove('hidden');
     }
   }
 }
@@ -623,6 +649,7 @@ async function startGame() {
   }
 
   boardStatus = 'playing';
+  updateGameStatusBadge();
   await enterPlayMode();
 }
 
@@ -1015,29 +1042,103 @@ async function loadLeaderboard() {
 
 // --- Reward ---
 
-function initReward() {
+function initStakes() {
   if (isCreator()) {
-    // Host sees editable input — visibility controlled by updateTopicCount
-    rewardInput.value = boardReward;
-    rewardInput.addEventListener('input', () => {
+    stakesInput.classList.remove('hidden');
+    stakesInput.value = boardReward;
+    stakesInput.addEventListener('input', () => {
       clearTimeout(rewardSaveTimer);
-      rewardSaveTimer = setTimeout(saveReward, 600);
+      rewardSaveTimer = setTimeout(saveStakes, 600);
     });
   }
 
-  // Everyone sees display if reward is set
+  // IN/OUT button handlers
+  stakesInBtn.addEventListener('click', () => updateStakeIn(true));
+  stakesOutBtn.addEventListener('click', () => updateStakeIn(false));
+
+  renderStakesDisplay();
+  renderStakesRoster();
   updateRewardDisplay();
 }
 
-async function saveReward() {
-  const value = rewardInput.value.trim();
+async function saveStakes() {
+  const value = stakesInput.value.trim();
   boardReward = value;
+  renderStakesDisplay();
   updateRewardDisplay();
 
   await supabase
     .from('boards')
     .update({ reward: value || null })
     .eq('id', boardId);
+}
+
+async function updateStakeIn(value) {
+  if (!myPlayer) return;
+  myPlayer.stake_in = value;
+  renderStakesRoster();
+  await supabase.from('players').update({ stake_in: value }).eq('id', myPlayer.id);
+}
+
+function renderStakesDisplay() {
+  if (boardReward) {
+    stakesDisplay.innerHTML = escapeHtml(boardReward);
+    stakesDisplay.classList.remove('stakes-display--hint');
+    stakesToggleRow.classList.remove('hidden');
+  } else {
+    if (isCreator()) {
+      stakesDisplay.innerHTML = 'Set a wager above';
+      stakesDisplay.classList.add('stakes-display--hint');
+    } else {
+      stakesDisplay.innerHTML = 'No wager set yet';
+      stakesDisplay.classList.add('stakes-display--hint');
+    }
+    stakesToggleRow.classList.add('hidden');
+  }
+
+  // Update IN/OUT button active states
+  if (myPlayer) {
+    stakesInBtn.classList.toggle('active', myPlayer.stake_in === true);
+    stakesOutBtn.classList.toggle('active', myPlayer.stake_in === false);
+  }
+}
+
+function renderStakesRoster() {
+  stakesRosterEl.innerHTML = '';
+
+  const inPlayers = allPlayers.filter(p => p.stake_in === true);
+  const outPlayers = allPlayers.filter(p => p.stake_in === false);
+  const undecided = allPlayers.filter(p => p.stake_in == null);
+
+  if (inPlayers.length === 0 && outPlayers.length === 0 && undecided.length === 0) return;
+
+  function renderGroup(label, players, cssModifier) {
+    if (players.length === 0) return;
+    const group = document.createElement('div');
+    group.className = 'stakes-group';
+    group.innerHTML = `<span class="stakes-group-label">${label}</span>`;
+    const dots = document.createElement('div');
+    dots.className = 'stakes-dots';
+    players.forEach(p => {
+      const dot = document.createElement('span');
+      dot.className = `stakes-dot${cssModifier ? ' ' + cssModifier : ''}`;
+      dot.style.background = p.color;
+      dot.title = p.name;
+      dots.appendChild(dot);
+    });
+    group.appendChild(dots);
+    stakesRosterEl.appendChild(group);
+  }
+
+  renderGroup('IN', inPlayers, '');
+  renderGroup('OUT', outPlayers, '');
+  renderGroup('Undecided', undecided, 'stakes-dot--undecided');
+
+  // Update button active states
+  if (myPlayer) {
+    stakesInBtn.classList.toggle('active', myPlayer.stake_in === true);
+    stakesOutBtn.classList.toggle('active', myPlayer.stake_in === false);
+  }
 }
 
 function updateRewardDisplay() {
@@ -1049,6 +1150,15 @@ function updateRewardDisplay() {
   }
 }
 
+function updateGameStatusBadge() {
+  if (boardStatus === 'playing') {
+    gameStatusBadge.textContent = 'LIVE';
+    gameStatusBadge.classList.add('game-status-badge--live');
+  } else {
+    gameStatusBadge.textContent = 'PLANNING';
+    gameStatusBadge.classList.remove('game-status-badge--live');
+  }
+}
 
 // --- Idea Bank ---
 
