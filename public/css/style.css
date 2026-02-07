@@ -1445,9 +1445,9 @@ input[type="email"]:focus {
   gap: var(--space-1);
   flex: 1;
   min-height: 0;
-  max-height: 20rem;
+  max-height: 32rem;
   overflow-y: auto;
-  padding: var(--space-1) 0;
+  padding: var(--space-1) var(--space-2) var(--space-1) 0;
   margin-bottom: var(--space-4);
 }
 
